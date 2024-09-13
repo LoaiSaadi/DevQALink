@@ -1,4 +1,4 @@
-const ReadyJob = require('../models/readyJobsModel');
+const ReadyJob = require('../../models/jobsModel/readyJobsModel');
 const moment = require('moment-timezone');
 
 // Handle POST request to add a new ready job

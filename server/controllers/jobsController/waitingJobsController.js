@@ -1,11 +1,11 @@
-const WaitingJob = require('../models/waitingJobsModel');
+const WaitingJob = require('../../models/jobsModel/waitingJobsModel');
 const moment = require('moment-timezone');
 
 
 // Handle POST request to add a new waiting job
 exports.addWaitingJob = async (req, res) => {
     try {
-        const { jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes } = req.body;
+        const { jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes, resumeJob } = req.body;
 
         // Check if testsToRun is provided and not empty
         if (!testsToRun || testsToRun.length === 0) {
@@ -35,6 +35,7 @@ exports.addWaitingJob = async (req, res) => {
             estimatedTime,
             createdDate,
             createdTime,
+            resumeJob: "Resume"
         });
 
         const savedJob = await newJob.save();

@@ -1,7 +1,7 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const waitingJobsRoutes = require('./routes/waitingJobs');
-const readyJobsRoutes = require('./routes/readyJobs');
+const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobs');
+const readyJobsRoutes = require('./routes/jobsRoutes/readyJobs');
 const poolsRoutes = require('./routes/pools');
 
 var app = express();
