@@ -1,0 +1,133 @@
+.jobs-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center; /* Center-aligns all text and inline elements in the container */
+}
+
+h1 {
+    margin-bottom: 20px;
+    text-align: center; /* Ensures header is centered */
+}
+
+.add-job-btn {
+    padding: 12px 20px; /* Increased padding for a bigger button */
+    background-color: #2196F3; /* Blue color */
+    color: white;
+    border: none;
+    border-radius: 8px; /* Slightly rounded corners */
+    cursor: pointer;
+    font-size: 16px; /* Increased font size */
+    font-weight: bold;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+    display: inline-block; /* Ensures button is centered with text-align */
+}
+
+.add-job-btn:hover {
+    background-color: #1976D2; /* Slightly darker blue on hover */
+}
+
+.table-container {
+    margin-top: 20px;
+}
+
+.jobs-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 40px; /* Increased space between tables */
+}
+
+.jobs-table th, .jobs-table td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: center;
+}
+
+.jobs-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.jobs-table .waiting-jobs th {
+    background-color: #ffe4e1; /* Soft red background for waiting jobs */
+}
+
+.jobs-table .ready-jobs th {
+    background-color: #e0f2f1; /* Soft green background for ready jobs */
+}
+
+.action-btn {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 0 5px; /* Space between buttons */
+}
+
+.action-btn:hover {
+    transform: scale(1.05); /* Slightly enlarge on hover */
+}
+
+/* Edit Button */
+.edit-btn {
+    background-color: #4CAF50; /* Green for editing */
+}
+
+.edit-btn:hover {
+    background-color: #45a049; /* Slightly darker green */
+}
+
+/* Delete Button */
+.delete-btn {
+    background-color: #f44336; /* Red for deletion */
+}
+
+.delete-btn:hover {
+    background-color: #d32f2f; /* Slightly darker red */
+}
+
+/* New column styles */
+.jobs-table th.activation-status {
+    background-color: #f5f5f5; /* Light grey for activation status column */
+    width: 150px; /* Adjust width as needed */
+}
+
+.jobs-table td.activation-status {
+    background-color: #fff; /* White background for activation status cells */
+    width: 150px; /* Adjust width as needed */
+}
+
+.jobs-table th.tests-to-run {
+    background-color: #f5f5f5; /* Light grey background for Tests to Run header */
+    width: 300px; /* Increased width for Tests to Run column */
+}
+
+.jobs-table td.tests-to-run {
+    white-space: pre-wrap; /* Preserves whitespace and wraps text */
+    text-align: left; /* Align text to the left */
+    word-break: break-word; /* Break words if necessary */
+    padding: 15px; /* Increased padding for better readability */
+}
+
+
+
+/* Pause/Resume Button */
+.pause-resume-btn {
+    background-color: #FF9800; /* Orange for pause/resume */
+    width:40px; /* Set the width */
+}
+
+.pause-resume-btn:hover {
+    background-color: #FB8C00; /* Slightly darker orange on hover */
+}
+
+.action-btn .icon {
+    width: 16px; /* Adjust size of the icon */
+    height: 16px;
+    margin-right: 5px; /* Add space between icon and text */
+    vertical-align: middle; /* Align icon with the text */
+}
