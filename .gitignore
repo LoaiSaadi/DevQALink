@@ -1,0 +1,8 @@
+# Ignore node_modules in server and frontend
+/server/node_modules
+/frontend/node_modules
+
+# Optional: Ignore logs, build files, and other common files
+*.log
+build/
+dist/
