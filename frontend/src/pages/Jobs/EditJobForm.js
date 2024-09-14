@@ -1,6 +1,5 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-//import './JobForm.css';
 import './EditJobForm.css';
 
 const EditJobForm = ({ job, closeForm, saveJob }) => {

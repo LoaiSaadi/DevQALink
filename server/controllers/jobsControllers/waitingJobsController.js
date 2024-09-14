@@ -1,29 +1,43 @@
-const ReadyJob = require('../../models/jobsModel/readyJobsModel');
+const WaitingJob = require('../../models/jobsModels/waitingJobsModel');
 const moment = require('moment-timezone');
 
-// Handle POST request to add a new ready job
-exports.addReadyJob = async (req, res) => {
-    try {
-        const {jobId, jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob } = req.body;
 
-        const newJob = new ReadyJob({
-            jobId,
+// Handle POST request to add a new waiting job
+exports.addWaitingJob = async (req, res) => {
+    try {
+        const { jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes, resumeJob } = req.body;
+
+        // Check if testsToRun is provided and not empty
+        if (!testsToRun || testsToRun.length === 0) {
+            return res.status(400).json({ message: 'testsToRun is required and cannot be empty' });
+        }
+        
+        const estimatedTime = `${estimatedHours}h ${estimatedMinutes}m`;
+
+        // Validate scheduleType
+        const validScheduleTypes = ['One-Time Job', 'Reoccurring Job'];
+        const validScheduleType = validScheduleTypes.includes(scheduleType) ? scheduleType : '-'; // Default to '-' if invalid
+
+        // Get the current date and time in Jerusalem timezone
+        const nowInJerusalem = moment().tz('Asia/Jerusalem');
+        const createdDate = nowInJerusalem.format('YYYY-MM-DD');
+        const createdTime = nowInJerusalem.format('HH:mm:ss');
+
+        const newJob = new WaitingJob({
             jobName,
             testsToRun,
             resourcePool,
             buildVersion,
             jobRunType,
-            scheduleType,
+            scheduleType: validScheduleType,
             scheduleTime,
             priorityLevel,
             estimatedTime,
             createdDate,
             createdTime,
-            activationStatus,
-            jobStatus: 'Ready',
-            resumeJob
+            resumeJob: "Resume"
         });
-        
+
         const savedJob = await newJob.save();
 
         res.status(201).json({
@@ -31,9 +45,9 @@ exports.addReadyJob = async (req, res) => {
             job: savedJob
         });
     } catch (error) {
-        console.error('Error saving ready job:', error);
+        console.error('Error saving waiting job:', error);
         res.status(500).json({
-            message: 'Error saving ready job',
+            message: 'Error saving waiting job',
             error: error.message
         });
     }
@@ -42,10 +56,9 @@ exports.addReadyJob = async (req, res) => {
 exports.deleteJobById = async (req, res) => {
     try {
         const jobId = req.params.jobId;
-        console.log('jobId:', jobId);
 
         // Use findOneAndDelete to search by the jobId field and delete the document
-        const deletedJob = await ReadyJob.findOneAndDelete({ jobId });
+        const deletedJob = await WaitingJob.findOneAndDelete({ jobId });
         console.log('deletedJob:', deletedJob);
 
         if (deletedJob) {
@@ -130,7 +143,7 @@ exports.updateJobById = async (req, res) => {
         // updateFields.createdTime = nowInJerusalem.format('HH:mm:ss');
 
         // Use findOneAndUpdate to search by the jobId field and update the document
-        const updatedJobDoc = await ReadyJob.findOneAndUpdate({ jobId }, updateFields, { new: true });
+        const updatedJobDoc = await WaitingJob.findOneAndUpdate({ jobId }, updateFields, { new: true });
 
         if (updatedJobDoc) {
             res.status(200).json({
@@ -149,15 +162,24 @@ exports.updateJobById = async (req, res) => {
     }
 };
 
-// Handle GET request to list all ready jobs
-exports.getReadyJobs = async (req, res) => {
-    try {
-        // const readyJobs = await ReadyJob.find();
-        const readyJobs = await ReadyJob.find().sort({ priorityLevel: -1 });
 
-        res.status(200).json(readyJobs);
+// Handle GET request to list all waiting jobs
+exports.getWaitingJobs = async (req, res) => {
+    try {
+        const waitingJobs = await WaitingJob.find();
+        res.status(200).json(waitingJobs);
     } catch (error) {
         res.status(400).json({ message: error.message });
     }
 };
 
+exports.getJobById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const job = await WaitingJob.findOne({ jobId });
+        res.status(200).json(job);
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

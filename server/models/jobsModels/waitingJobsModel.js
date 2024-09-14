@@ -17,6 +17,7 @@ const waitingJobSchema = new mongoose.Schema({
     status: { type: String, default: 'Waiting' },
     activationStatus: { type: String, default: 'Activated' },
     resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true}
+    // THERE IS MORE
 });
 
 // Apply auto-increment plugin to the schema

@@ -1,0 +1,89 @@
+/* Management.css */
+
+.management-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center; /* Center-aligns all text and inline elements in the container */
+}
+
+h1 {
+    margin-bottom: 20px;
+    text-align: center; /* Ensures header is centered */
+}
+
+button {
+    padding: 12px 20px; /* Increased padding for a bigger button */
+    background-color: #2196F3; /* Blue color */
+    color: white;
+    border: none;
+    border-radius: 8px; /* Slightly rounded corners */
+    cursor: pointer;
+    font-size: 16px; /* Increased font size */
+    font-weight: bold;
+    margin-bottom: 20px;
+    transition: background-color 0.3s;
+    display: inline-block; /* Ensures button is centered with text-align */
+}
+
+button:hover {
+    background-color: #1976D2; /* Slightly darker blue on hover */
+}
+
+.tests-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px; /* Space between button and table */
+}
+
+.tests-table th, .tests-table td {
+    border: 1px solid #ddd;
+    padding: 12px; /* Increased padding for better readability */
+    text-align: center;
+}
+
+.tests-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.tests-table td button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px; /* Slightly larger font size */
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 0 5px; /* Space between buttons */
+}
+
+/* Edit Button */
+.tests-table td .edit-btn {
+    background-color: #4CAF50; /* Green for editing */
+}
+
+.tests-table td .edit-btn:hover {
+    background-color: #45a049; /* Slightly darker green */
+}
+
+/* Delete Button */
+.tests-table td .delete-btn {
+    background-color: #f44336; /* Red for deletion */
+}
+
+.tests-table td .delete-btn:hover {
+    background-color: #d32f2f; /* Slightly darker red */
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .tests-table th, .tests-table td {
+        padding: 8px;
+    }
+    
+    button {
+        font-size: 14px;
+        padding: 10px 15px;
+    }
+}

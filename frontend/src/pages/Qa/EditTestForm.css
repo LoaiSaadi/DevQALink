@@ -1,0 +1,125 @@
+/* EditTestForm.css */
+
+.form-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.4);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 20px; /* Padding to ensure form doesn't collide with edges */
+    box-sizing: border-box;
+}
+
+.form-card {
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    padding: 20px;
+    position: relative;
+    width: 100%;
+    max-width: 400px; /* Adjusted max-width for a slightly larger form */
+    max-height: 90vh; /* Ensure form does not exceed 90% of viewport height */
+    overflow-y: auto; /* Add scroll if content overflows */
+}
+
+.close-btn {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 24px;
+    border: none;
+    background: none;
+    color: #333;
+    cursor: pointer;
+}
+
+.form-container {
+    display: flex;
+    flex-direction: column;
+}
+
+.form-row {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 15px;
+}
+
+.form-row label {
+    margin-bottom: 5px;
+    font-weight: bold;
+}
+
+.form-row input[type="text"],
+.form-row input[type="number"],
+.form-row select {
+    padding: 12px;
+    border: 1px solid #ccc;
+    border-radius: 6px;
+    font-size: 16px;
+    width: 100%; /* Ensure width matches other fields */
+    box-sizing: border-box; /* Ensure padding and border are included in the width */
+}
+
+.form-row input:disabled,
+.form-row select:disabled {
+    background-color: #f5f5f5; /* Light grey background for disabled fields */
+    border-color: #e0e0e0; /* Lighter border color */
+    color: #9e9e9e; /* Text color for disabled fields */
+    cursor: not-allowed; /* Cursor to indicate that the field is not interactive */
+}
+
+.btn-container {
+    display: flex;
+    justify-content: center; /* Center buttons horizontally */
+    gap: 10px; /* Space between buttons */
+    margin-top: 20px;
+}
+
+.submit-btn,
+.cancel-btn {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+}
+
+.submit-btn {
+    background-color: #007bff; /* Blue color */
+    color: #fff;
+}
+
+.submit-btn:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+.cancel-btn {
+    background: #f44336;
+    color: #fff;
+}
+
+.cancel-btn:hover {
+    background: #e53935;
+}
+
+/* Responsive Design */
+@media (max-width: 600px) {
+    .form-card {
+        max-width: 90%;
+        padding: 10px;
+    }
+
+    .btn-container {
+        flex-direction: column;
+        gap: 5px;
+    }
+
+    .btn {
+        width: 100%;
+    }
+}

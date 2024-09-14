@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const waitingJobsController = require('../../controllers/jobsController/waitingJobsController');
+const waitingJobsController = require('../../controllers/jobsControllers/waitingJobsController');
 
 // POST request to add a new waiting job
 router.post('/addJob', waitingJobsController.addWaitingJob); // http://localhost:3000/jobs/waitingJobs/addJob

@@ -1,8 +1,5 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobs');
-const readyJobsRoutes = require('./routes/jobsRoutes/readyJobs');
-const poolsRoutes = require('./routes/pools');
 
 var app = express();
 var bodyParser = require('body-parser');
@@ -28,13 +25,22 @@ app.use(upload.array());
 const PORT = 3000;
 
 // Connect to MongoDB
-mongoose.connect('mongodb://localhost:27017/Jobs', { useNewUrlParser: true, useUnifiedTopology: true })
+mongoose.connect('mongodb://localhost:27017/DevQALink-DB', { useNewUrlParser: true, useUnifiedTopology: true })
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB', err));
 
-// Use routes
+// Jobs routes
+const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobsRoute');
+const readyJobsRoutes = require('./routes/jobsRoutes/readyJobsRoute');
 app.use('/jobs/waitingJobs', waitingJobsRoutes);
 app.use('/jobs/readyJobs', readyJobsRoutes);
+
+
+// Qa routes
+const testsRoutes = require('./routes/qaRoutes/testsRoute');
+app.use('/tests', testsRoutes);
+
+const poolsRoutes = require('./routes/pools');
 app.use('/pools', poolsRoutes);
 
 // Start the server

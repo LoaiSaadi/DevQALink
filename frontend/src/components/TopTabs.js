@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { AppBar, Tabs, Tab, Box } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import WorkIcon from '@mui/icons-material/Work'; // New icon for Jobs
-import CheckCircleIcon from '@mui/icons-material/CheckCircle'; // New icon for Completed
+import QaIcon from '@mui/icons-material/DeviceHub'; // New icon for Jobs
+import ManagementIcon from '@mui/icons-material/Dashboard';
+import JobsIcon from '@mui/icons-material/Work'; // New icon for Jobs
+import ReportsIcon from '@mui/icons-material/CheckCircle'; // New icon for Completed
 import { Link } from 'react-router-dom'; // Import Link
 
 const TopTabs = () => {
@@ -15,9 +16,10 @@ const TopTabs = () => {
 
     const menuItems = [
         { text: 'Home', icon: <HomeIcon />, link: '/' },
-        { text: 'Management', icon: <DashboardIcon />, link: '/management' },
-        { text: 'Jobs', icon: <WorkIcon />, link: '/jobs' },
-        { text: 'Reports', icon: <CheckCircleIcon />, link: '/reports' },
+        { text: 'QA', icon: <QaIcon />, link: '/qa' },
+        { text: 'Management', icon: <ManagementIcon />, link: '/management' },
+        { text: 'Jobs', icon: <JobsIcon />, link: '/jobs' },
+        { text: 'Reports', icon: <ReportsIcon />, link: '/reports' },
     ];
 
     return (
