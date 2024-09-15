@@ -40,6 +40,15 @@ app.use('/jobs/readyJobs', readyJobsRoutes);
 const testsRoutes = require('./routes/qaRoutes/testsRoute');
 app.use('/tests', testsRoutes);
 
+// Builds routes
+const buildsRoutes = require('./routes/buildsRoutes/versionBuildRoute');
+app.use('/builds', buildsRoutes);
+
+// Management routes
+const serversRoutes = require('./routes/managementRoutes/serversRoute');
+app.use('/management/servers', serversRoutes);
+
+
 const poolsRoutes = require('./routes/pools');
 app.use('/pools', poolsRoutes);
 

@@ -5,11 +5,11 @@ const moment = require('moment-timezone');
 // Handle POST request to add a new waiting job
 exports.addWaitingJob = async (req, res) => {
     try {
-        const { jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes, resumeJob } = req.body;
+        const { jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes, resumeJob } = req.body;
 
-        // Check if testsToRun is provided and not empty
-        if (!testsToRun || testsToRun.length === 0) {
-            return res.status(400).json({ message: 'testsToRun is required and cannot be empty' });
+        // Check if testToRun is provided and not empty
+        if (!testToRun || testToRun.length === 0) {
+            return res.status(400).json({ message: 'testToRun is required and cannot be empty' });
         }
         
         const estimatedTime = `${estimatedHours}h ${estimatedMinutes}m`;
@@ -25,7 +25,7 @@ exports.addWaitingJob = async (req, res) => {
 
         const newJob = new WaitingJob({
             jobName,
-            testsToRun,
+            testToRun,
             resourcePool,
             buildVersion,
             jobRunType,
@@ -84,7 +84,7 @@ exports.updateJobById = async (req, res) => {
         const jobId = req.params.jobId;
         const {
             jobName,
-            testsToRun,
+            testToRun,
             resourcePool,
             buildVersion,
             jobRunType,
@@ -103,7 +103,7 @@ exports.updateJobById = async (req, res) => {
         console.log("req body is: ", req.body); // Log entire request body
         console.log("jobId: ", jobId);
         console.log("jobName: ", jobName);
-        console.log("testsToRun: ", testsToRun);
+        console.log("testToRun: ", testToRun);
         console.log("resourcePool: ", resourcePool);
         console.log("buildVersion: ", buildVersion);
         console.log("jobRunType: ", jobRunType);
@@ -121,7 +121,7 @@ exports.updateJobById = async (req, res) => {
         const updateFields = {};
 
         if (jobName !== undefined) updateFields.jobName = jobName;
-        if (testsToRun !== undefined) updateFields.testsToRun = testsToRun;
+        if (testToRun !== undefined) updateFields.testToRun = testToRun;
         if (resourcePool !== undefined) updateFields.resourcePool = resourcePool;
         if (buildVersion !== undefined) updateFields.buildVersion = buildVersion;
         if (jobRunType !== undefined) updateFields.jobRunType = jobRunType;

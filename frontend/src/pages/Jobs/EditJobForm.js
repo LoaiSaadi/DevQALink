@@ -51,7 +51,7 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
 
     const [formData, setFormData] = useState({
         jobName: job.jobName || '',
-        testsToRun: Array.isArray(job.testsToRun) ? job.testsToRun.join(', ') : job.testsToRun || '',
+        testToRun: job.testToRun || '',
         resourcePool: job.resourcePool || '',
         buildVersion: job.buildVersion || '',
         jobRunType: job.jobRunType || 'Immediately',
@@ -65,7 +65,7 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
         activationStatus: job.activationStatus || 'Activated'
     });
 
-    const [isActivationStatusDisabled, setIsActivationStatusDisabled] = useState(formData.scheduleType !== 'Reoccurring Job');
+    // const [isActivationStatusDisabled, setIsActivationStatusDisabled] = useState(formData.scheduleType !== 'Reoccurring Job');
     const formRef = useRef(null);
 
     const handleChange = (e) => {
@@ -75,9 +75,9 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
             [name]: value,
         });
 
-        if (name === 'scheduleType') {
-            setIsActivationStatusDisabled(value !== 'Reoccurring Job');
-        }
+        // if (name === 'scheduleType') {
+        //     setIsActivationStatusDisabled(value !== 'Reoccurring Job');
+        // }
     };
 
     const getCurrentTime = () => {
@@ -112,7 +112,7 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
         // Prepare the data to send in the request body
         const jobData = {
             jobName: updatedJobData.jobName,
-            testsToRun: updatedJobData.testsToRun.split(',').map(test => test.trim()),
+            testToRun: updatedJobData.testToRun,
             resourcePool: updatedJobData.resourcePool,
             buildVersion: updatedJobData.buildVersion,
             jobRunType: updatedJobData.jobRunType,
@@ -211,12 +211,12 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                     </div>
 
                     <div className="form-row">
-                        <label htmlFor="testsToRun">Tests to Run</label>
+                        <label htmlFor="testToRun">Tests to Run</label>
                         <input 
                             type="text" 
-                            id="testsToRun" 
-                            name="testsToRun" 
-                            value={formData.testsToRun} 
+                            id="testToRun" 
+                            name="testToRun" 
+                            value={formData.testToRun} 
                             onChange={handleChange}
                             disabled={isReady}
                         />

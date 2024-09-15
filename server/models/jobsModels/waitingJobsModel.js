@@ -4,7 +4,7 @@ const autoIncrement = require('mongoose-sequence')(mongoose);
 
 const waitingJobSchema = new mongoose.Schema({
     jobName: { type: String, required: true },
-    testsToRun: [{ type: String, required: true }],
+    testToRun: { type: String, required: true },
     resourcePool: { type: String, required: true },
     buildVersion: { type: String, required: true },
     jobRunType: { type: String, enum: ['Immediately', 'Scheduled'], required: true },

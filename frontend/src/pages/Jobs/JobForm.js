@@ -4,7 +4,7 @@ import './JobForm.css';
 const JobForm = ({ closeForm, onJobAdded }) => {
     const [formData, setFormData] = useState({
         jobName: '',
-        testsToRun: [],
+        testToRun:'',
         resourcePool: '',
         buildVersion: '',
         jobRunType: 'Immediately',
@@ -81,7 +81,7 @@ const JobForm = ({ closeForm, onJobAdded }) => {
         const validScheduleTypes = ['One-Time Job', 'Reoccurring Job'];
         const validScheduleType = validScheduleTypes.includes(formData.scheduleType) ? formData.scheduleType : '-';
     
-        const testsArray = formData.testsToRun.split(',').map(test => test.trim()).filter(test => test);
+        // const testsArray = formData.testsToRun.split(',').map(test => test.trim()).filter(test => test);
     
         // Use current time if scheduleTime is empty
         const scheduleTime = formData.scheduleTime || getCurrentTime();
@@ -91,8 +91,6 @@ const JobForm = ({ closeForm, onJobAdded }) => {
             estimatedTime,
             scheduleType: formData.jobRunType === 'Immediately' ? '-' : validScheduleType, // Updated line
             scheduleTime,
-            testsToRun: testsArray,
-            
         };
 
         try {
@@ -165,8 +163,8 @@ const JobForm = ({ closeForm, onJobAdded }) => {
                     </div>
 
                     <div className="form-row">
-                        <label htmlFor="testsToRun">Tests to Run</label>
-                        <input type="text" id="testsToRun" name="testsToRun" value={formData.testsToRun} onChange={handleChange} required />
+                        <label htmlFor="testToRun">Tests to Run</label>
+                        <input type="text" id="testToRun" name="testToRun" value={formData.testToRun} onChange={handleChange} required />
                     </div>
 
                     <div className="form-row">

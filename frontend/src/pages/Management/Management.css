@@ -29,24 +29,24 @@ button:hover {
     background-color: #1976D2; /* Slightly darker blue on hover */
 }
 
-.tests-table {
+.servers-table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px; /* Space between button and table */
 }
 
-.tests-table th, .tests-table td {
+.servers-table th, .servers-table td {
     border: 1px solid #ddd;
     padding: 12px; /* Increased padding for better readability */
     text-align: center;
 }
 
-.tests-table th {
+.servers-table th {
     background-color: #f2f2f2;
     font-weight: bold;
 }
 
-.tests-table td button {
+.servers-table td button {
     padding: 8px 12px;
     border: none;
     border-radius: 6px;
@@ -59,20 +59,20 @@ button:hover {
 }
 
 /* Edit Button */
-.tests-table td .edit-btn {
+.servers-table td .edit-btn {
     background-color: #4CAF50; /* Green for editing */
 }
 
-.tests-table td .edit-btn:hover {
+.servers-table td .edit-btn:hover {
     background-color: #45a049; /* Slightly darker green */
 }
 
 /* Delete Button */
-.tests-table td .delete-btn {
+.servers-table td .delete-btn {
     background-color: #f44336; /* Red for deletion */
 }
 
-.tests-table td .delete-btn:hover {
+.servers-table td .delete-btn:hover {
     background-color: #d32f2f; /* Slightly darker red */
 }
 

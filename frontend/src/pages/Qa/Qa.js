@@ -7,7 +7,7 @@ import DeleteTestForm from './DeleteTestForm'; // Import DeleteTestForm for dele
 
 const fetchTestsData = async () => {
     try {
-        const response = await fetch('http://localhost:3000/tests/getAllTests');
+        const response = await fetch('http://localhost:3000/tests/allTests');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -141,10 +141,10 @@ const Qa = () => {
                             <td>{test.testDescription}</td>
                             <td>{test.saveAs}</td>
                             <td>
-                                <button onClick={() => openEditForm(test)}>Edit</button>
+                                <button className='action-btn edit-btn' onClick={() => openEditForm(test)}>Edit</button>
                             </td>
                             <td>
-                                <button onClick={() => openDeleteForm(test)}>Delete</button>
+                                <button className="action-btn delete-btn" onClick={() => openDeleteForm(test)}>Delete</button>
                             </td>
                         </tr>
                     ))}

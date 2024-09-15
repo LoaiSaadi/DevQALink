@@ -4,12 +4,12 @@ const moment = require('moment-timezone');
 // Handle POST request to add a new ready job
 exports.addReadyJob = async (req, res) => {
     try {
-        const {jobId, jobName, testsToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob } = req.body;
+        const {jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob } = req.body;
 
         const newJob = new ReadyJob({
             jobId,
             jobName,
-            testsToRun,
+            testToRun,
             resourcePool,
             buildVersion,
             jobRunType,
@@ -71,7 +71,7 @@ exports.updateJobById = async (req, res) => {
         const jobId = req.params.jobId;
         const {
             jobName,
-            testsToRun,
+            testToRun,
             resourcePool,
             buildVersion,
             jobRunType,
@@ -90,7 +90,7 @@ exports.updateJobById = async (req, res) => {
         console.log("req body is: ", req.body); // Log entire request body
         console.log("jobId: ", jobId);
         console.log("jobName: ", jobName);
-        console.log("testsToRun: ", testsToRun);
+        console.log("testToRun: ", testToRun);
         console.log("resourcePool: ", resourcePool);
         console.log("buildVersion: ", buildVersion);
         console.log("jobRunType: ", jobRunType);
@@ -108,7 +108,7 @@ exports.updateJobById = async (req, res) => {
         const updateFields = {};
 
         if (jobName !== undefined) updateFields.jobName = jobName;
-        if (testsToRun !== undefined) updateFields.testsToRun = testsToRun;
+        if (testToRun !== undefined) updateFields.testToRun = testToRun;
         if (resourcePool !== undefined) updateFields.resourcePool = resourcePool;
         if (buildVersion !== undefined) updateFields.buildVersion = buildVersion;
         if (jobRunType !== undefined) updateFields.jobRunType = jobRunType;

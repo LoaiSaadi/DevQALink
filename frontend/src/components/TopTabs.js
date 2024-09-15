@@ -3,6 +3,7 @@ import { AppBar, Tabs, Tab, Box } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import QaIcon from '@mui/icons-material/DeviceHub'; // New icon for Jobs
 import ManagementIcon from '@mui/icons-material/Dashboard';
+import BuildIcon from '@mui/icons-material/Build';
 import JobsIcon from '@mui/icons-material/Work'; // New icon for Jobs
 import ReportsIcon from '@mui/icons-material/CheckCircle'; // New icon for Completed
 import { Link } from 'react-router-dom'; // Import Link
@@ -16,7 +17,8 @@ const TopTabs = () => {
 
     const menuItems = [
         { text: 'Home', icon: <HomeIcon />, link: '/' },
-        { text: 'QA', icon: <QaIcon />, link: '/qa' },
+        { text: 'QA Testers', icon: <QaIcon />, link: '/qa' },
+        { text: 'Dev Builds', icon: <BuildIcon />, link: '/builds' },
         { text: 'Management', icon: <ManagementIcon />, link: '/management' },
         { text: 'Jobs', icon: <JobsIcon />, link: '/jobs' },
         { text: 'Reports', icon: <ReportsIcon />, link: '/reports' },

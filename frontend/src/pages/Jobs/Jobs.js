@@ -271,38 +271,25 @@ const Jobs = () => {
     };
 
 
-
     // const formatTestsToRun = (tests) => {
+    //     // Check if tests is an array and is not empty
     //     if (!tests || !Array.isArray(tests) || tests.length === 0) return '-';
     
-    //     let formattedTests = '';
-    //     for (let i = 0; i < tests.length; i += 2) {
-    //         const pair = tests.slice(i, i + 2);
-    //         console.log('pair:', pair);
-    //         formattedTests += pair.join(', ') + ', ';
-    //     }
+    //     // Format each test individually, removing commas and adding <br> tags
+    //     const formattedTests = tests
+    //         .map((test, index) => `${index + 1}) ${test.replace(/,/g, '')}`)
+    //         .join('<br />');
     
-    //     return formattedTests.slice(0, -2); // Remove trailing comma and space
+    //     return formattedTests;
     // };
-
-    const formatTestsToRun = (tests) => {
-        // Check if tests is an array and is not empty
-        if (!tests || !Array.isArray(tests) || tests.length === 0) return '-';
-    
-        // Format each test individually, removing commas and adding <br> tags
-        const formattedTests = tests
-            .map((test, index) => `${index + 1}) ${test.replace(/,/g, '')}`)
-            .join('<br />');
-    
-        return formattedTests;
-    };
 
     const renderJobRow = (job, isWaiting) => {
         return (
             <tr key={job.jobId}>
                 <td>{job.jobId}</td>
                 <td>{job.jobName}</td>
-                <td dangerouslySetInnerHTML={{ __html: formatTestsToRun(job.testsToRun) }}></td>
+                {/* <td dangerouslySetInnerHTML={{ __html: formatTestsToRun(job.testsToRun) }}></td> */}
+                <td>{job.testToRun}</td>
                 <td>{job.resourcePool}</td>
                 <td>{job.buildVersion}</td>
                 <td>{job.jobRunType}</td>

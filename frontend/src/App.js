@@ -3,6 +3,7 @@ import React from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import TopTabs from './components/TopTabs'; // Import the TopTabs component
 import Home from './pages/Home';
+import Build from './pages/Build/Build'; // Points to the Build component
 import Management from './pages/Management/Management'; // Points to the Management component
 import Jobs from './pages/Jobs/Jobs'; // Points to the Jobs component
 import Reports from './pages/Reports'; // Reports  page
@@ -18,6 +19,7 @@ const App = () => {
                     <Routes>
                         <Route path="/" element={<Home />} />
                         <Route path="/qa" element={<QA />} />
+                        <Route path="/builds" element={<Build />} />
                         <Route path="/management" element={<Management />} />
                         <Route path="/jobs" element={<Jobs />} /> {/* Route for Jobs */}
                         <Route path="/reports" element={<Reports />} /> {/* Route for Reports */}

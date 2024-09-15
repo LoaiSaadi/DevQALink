@@ -1,39 +1,38 @@
-// src/components/Management.js
 import React, { useState, useEffect } from 'react';
 import './Management.css'; // Add styling as needed
-import EditTestForm from './EditTestForm'; // Import EditTestForm for editing tests
-import TestForm from './TestForm'; // Import TestForm for adding new tests
-import DeleteTestForm from './DeleteTestForm'; // Import DeleteTestForm for deleting tests
+import EditServerForm from './Servers/EditServerForm'; // Import EditServerForm for editing servers
+import ServerForm from './Servers/ServerForm'; // Import ServerForm for adding new servers
+import DeleteServerForm from './Servers/DeleteServerForm'; // Import DeleteServerForm for deleting servers
 
-const fetchTestsData = async () => {
+const fetchServersData = async () => {
     try {
-        const response = await fetch('http://localhost:3000/tests/getAllTests');
+        const response = await fetch('http://localhost:3000/management/servers/allServers');
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         return data;
     } catch (error) {
-        console.error('Error fetching tests data:', error);
+        console.error('Error fetching servers data:', error);
         throw error;
     }
 };
 
 const Management = () => {
-    const [tests, setTests] = useState([]);
+    const [servers, setServers] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isAdding, setIsAdding] = useState(true); // New state to differentiate form type
-    const [editingTest, setEditingTest] = useState(null);
+    const [editingServer, setEditingServer] = useState(null);
     const [isDeleteFormOpen, setIsDeleteFormOpen] = useState(false); // State for delete form
-    const [testToDelete, setTestToDelete] = useState(null); // State to store the test to delete
+    const [serverToDelete, setServerToDelete] = useState(null); // State to store the server to delete
 
     useEffect(() => {
         const fetchData = async () => {
             try {
-                const testsData = await fetchTestsData();
-                setTests(testsData);
+                const serversData = await fetchServersData();
+                setServers(serversData);
             } catch (error) {
-                console.error('Error fetching test data:', error);
+                console.error('Error fetching server data:', error);
             }
         };
 
@@ -49,102 +48,106 @@ const Management = () => {
     const closeForm = () => {
         setIsFormOpen(false);
         setIsAdding(true); // Reset to add mode
-        setEditingTest(null);
+        setEditingServer(null);
         setIsDeleteFormOpen(false); // Close delete form
-        setTestToDelete(null); // Reset test to delete
+        setServerToDelete(null); // Reset server to delete
     };
 
-    const openEditForm = (test) => {
-        setEditingTest(test);
+    const openEditForm = (server) => {
+        setEditingServer(server);
         setIsAdding(false); // Set form type to edit
         setIsFormOpen(true);
     };
 
-    const openDeleteForm = (test) => {
-        setTestToDelete(test);
+    const openDeleteForm = (server) => {
+        setServerToDelete(server);
         setIsDeleteFormOpen(true); // Open delete form
     };
 
-    const handleDelete = async () => {
-        console.log('Deleting test:', testToDelete);
+    const handleServerDelete = async () => {
+        console.log('Deleting server:', serverToDelete);
         try {
-            const updatedTests = await fetchTestsData();
-            setTests(updatedTests);
+            const updatedServers = await fetchServersData();
+            setServers(updatedServers);
         }
         catch (error) {
-            console.error('Error handling deleted test:', error);
+            console.error('Error handling deleted server:', error);
         }
     };
 
-    const handleTestUpdated = async (updatedTest) => {
+    const handleServerUpdated = async (updatedServer) => {
         try {
-            const updatedTests = await fetchTestsData();
-            setTests(updatedTests);
+            const updatedServers = await fetchServersData();
+            setServers(updatedServers);
         } catch (error) {
-            console.error('Error handling updated test:', error);
+            console.error('Error handling updated server:', error);
         }
     };
 
-    const handleTestAdded = async (newTest) => {
-        console.log('Tring to show :', newTest);
+    const handleServerAdded = async (newServer) => {
+        console.log('Tring to show :', newServer);
         try {
-            const updatedTests = await fetchTestsData();
-            setTests(updatedTests);
+            const updatedServers = await fetchServersData();
+            setServers(updatedServers);
         } catch (error) {
-            console.error('Error handling added test:', error);
+            console.error('Error handling added server:', error);
         }
     };
 
     return (
         <div className="management-container">
-            <h1>Management</h1>
-            <button onClick={openForm}>Add Test</button>
+            <h1>Resources Management</h1>
+            <button onClick={openForm}>Add Server</button>
             {isFormOpen && (
                 isAdding ? (
-                    <TestForm
+                    <ServerForm
                         closeForm={closeForm}
-                        onTestAdded={handleTestAdded} // Handler for saving new tests
+                        onServerAdded={handleServerAdded} // Handler for saving new servers
                     />
                 ) : (
-                    <EditTestForm
-                        test={editingTest} // Passing the test object for editing
+                    <EditServerForm
+                        server={editingServer} // Passing the server object for editing
                         closeForm={closeForm}
-                        saveTest={handleTestUpdated} // Handler for saving updates
+                        saveServer={handleServerUpdated} // Handler for saving updates
                     />
                 )
             )}
             {isDeleteFormOpen && (
-                <DeleteTestForm
-                    test={testToDelete}
+                <DeleteServerForm
+                    server={serverToDelete}
                     closeForm={closeForm}
-                    deleteTest={handleDelete} // Handler for deleting tests
+                    deleteServer={handleServerDelete} // Handler for deleting servers
                 />
             )}
 
-            <h2>Tests</h2>
-            <table className="tests-table">
+            <h2>Servers</h2>
+            <table className="servers-table">
                 <thead>
                     <tr>
-                        <th>Test ID</th>
-                        <th>Test Title</th>
+                        <th>Server ID</th>
+                        <th>IP Address</th>
                         <th>Description</th>
-                        <th>Type</th>
+                        <th>Cluster Connected To</th>
+                        <th>Date Created</th>
+                        <th>Time Created</th>
                         <th>Edit</th>
                         <th>Delete</th>
                     </tr>
                 </thead>
                 <tbody>
-                    {tests.map(test => (
-                        <tr key={test.testId}>
-                            <td>{test.testId}</td>
-                            <td>{test.testTitle}</td>
-                            <td>{test.testDescription}</td>
-                            <td>{test.saveAs}</td>
+                    {servers.map(server => (
+                        <tr key={server.serverId}>
+                            <td>{server.serverId}</td>
+                            <td>{server.serverIp}</td>
+                            <td>{server.serverDescription}</td>
+                            <td>{server.clusterConnectedTo}</td>
+                            <td>{server.createdDate}</td>
+                            <td>{server.createdTime}</td>
                             <td>
-                                <button onClick={() => openEditForm(test)}>Edit</button>
+                                <button className='action-btn edit-btn' onClick={() => openEditForm(server)}>Edit</button>
                             </td>
                             <td>
-                                <button onClick={() => openDeleteForm(test)}>Delete</button>
+                                <button className="action-btn delete-btn" onClick={() => openDeleteForm(server)}>Delete</button>
                             </td>
                         </tr>
                     ))}
