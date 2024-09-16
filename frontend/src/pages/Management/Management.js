@@ -1,8 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import './Management.css'; // Add styling as needed
+
 import EditServerForm from './Servers/EditServerForm'; // Import EditServerForm for editing servers
 import ServerForm from './Servers/ServerForm'; // Import ServerForm for adding new servers
 import DeleteServerForm from './Servers/DeleteServerForm'; // Import DeleteServerForm for deleting servers
+
+import EditClusterForm from './Clusters/EditClusterForm'; // Import EditClusterForm for editing clusters
+import ClusterForm from './Clusters/ClusterForm'; // Import ClusterForm for adding new clusters
+import DeleteClusterForm from './Clusters/DeleteClusterForm'; // Import DeleteClusterForm for deleting clusters
 
 const fetchServersData = async () => {
     try {
@@ -18,75 +23,104 @@ const fetchServersData = async () => {
     }
 };
 
+const fetchClustersData = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/management/clusters/allClusters');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching clusters data:', error);
+        throw error;
+    }
+};
+
 const Management = () => {
+    // States for servers
     const [servers, setServers] = useState([]);
-    const [isFormOpen, setIsFormOpen] = useState(false);
-    const [isAdding, setIsAdding] = useState(true); // New state to differentiate form type
+    const [isServerFormOpen, setIsServerFormOpen] = useState(false);
+    const [isAddingServer, setIsAddingServer] = useState(true); // New state to differentiate form type
     const [editingServer, setEditingServer] = useState(null);
-    const [isDeleteFormOpen, setIsDeleteFormOpen] = useState(false); // State for delete form
+    const [isDeleteServerFormOpen, setIsDeleteServerFormOpen] = useState(false); // State for delete form
     const [serverToDelete, setServerToDelete] = useState(null); // State to store the server to delete
+
+    // States for clusters
+    const [clusters, setClusters] = useState([]);
+    const [isClusterFormOpen, setIsClusterFormOpen] = useState(false);
+    const [isAddingCluster, setIsAddingCluster] = useState(true); // New state to differentiate form type
+    const [editingCluster, setEditingCluster] = useState(null);
+    const [isDeleteClusterFormOpen, setIsDeleteClusterFormOpen] = useState(false); // State for delete form
+    const [clusterToDelete, setClusterToDelete] = useState(null); // State to store the cluster to delete
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 const serversData = await fetchServersData();
                 setServers(serversData);
+                const clustersData = await fetchClustersData();
+                setClusters(clustersData);
             } catch (error) {
-                console.error('Error fetching server data:', error);
+                console.error('Error fetching data:', error);
             }
         };
 
         fetchData();
     }, []);
 
-
-    const openForm = () => {
-        setIsAdding(true); // Set form type to add
-        setIsFormOpen(true);
+    // Server form handlers
+    const openServerForm = () => {
+        setIsAddingServer(true);
+        setIsServerFormOpen(true);
     };
 
-    const closeForm = () => {
-        setIsFormOpen(false);
-        setIsAdding(true); // Reset to add mode
+    const closeServerForm = () => {
+        setIsServerFormOpen(false);
+        setIsAddingServer(true);
         setEditingServer(null);
-        setIsDeleteFormOpen(false); // Close delete form
-        setServerToDelete(null); // Reset server to delete
+        setIsDeleteServerFormOpen(false);
+        setServerToDelete(null);
     };
 
-    const openEditForm = (server) => {
+    const openEditServerForm = (server) => {
         setEditingServer(server);
-        setIsAdding(false); // Set form type to edit
-        setIsFormOpen(true);
+        setIsAddingServer(false);
+        setIsServerFormOpen(true);
     };
 
-    const openDeleteForm = (server) => {
+    const openDeleteServerForm = (server) => {
         setServerToDelete(server);
-        setIsDeleteFormOpen(true); // Open delete form
+        setIsDeleteServerFormOpen(true);
     };
 
     const handleServerDelete = async () => {
-        console.log('Deleting server:', serverToDelete);
         try {
+            // Perform server deletion here (e.g., using a DELETE request)
+            await fetchServersData(); // Refetch server data to update the list
             const updatedServers = await fetchServersData();
             setServers(updatedServers);
-        }
-        catch (error) {
+            closeServerForm();
+        } catch (error) {
             console.error('Error handling deleted server:', error);
         }
     };
 
     const handleServerUpdated = async (updatedServer) => {
         try {
+            // Perform server update here (e.g., using a PUT request)
             const updatedServers = await fetchServersData();
+            const updatedClusters = await fetchClustersData();
             setServers(updatedServers);
+            setClusters(updatedClusters);
         } catch (error) {
             console.error('Error handling updated server:', error);
         }
     };
 
     const handleServerAdded = async (newServer) => {
-        console.log('Tring to show :', newServer);
         try {
+            // Perform server addition here (e.g., using a POST request)
             const updatedServers = await fetchServersData();
             setServers(updatedServers);
         } catch (error) {
@@ -94,39 +128,172 @@ const Management = () => {
         }
     };
 
+    // Cluster form handlers
+    const openClusterForm = () => {
+        setIsAddingCluster(true);
+        setIsClusterFormOpen(true);
+    };
+
+    const closeClusterForm = () => {
+        setIsClusterFormOpen(false);
+        setIsAddingCluster(true);
+        setEditingCluster(null);
+        setIsDeleteClusterFormOpen(false);
+        setClusterToDelete(null);
+    };
+
+    const openEditClusterForm = (cluster) => {
+        setEditingCluster(cluster);
+        setIsAddingCluster(false);
+        setIsClusterFormOpen(true);
+    };
+
+    const openDeleteClusterForm = (cluster) => {
+        setClusterToDelete(cluster);
+        setIsDeleteClusterFormOpen(true);
+    };
+
+    const handleClusterDelete = async (deletedCluster) => {
+        try {
+            // Update the 'clusterConnectedTo' field for each server
+            const updateServerPromises = deletedCluster.servers.map(async (serverIp) => {
+                const response = await fetch(`http://localhost:3000/management/servers/updateTheClusterConnectedToByIp/${serverIp}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ clusterConnectedTo: null }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update server ${serverIp}: ${response.statusText}`);
+                }
+            });
+
+            // Wait for all server updates to complete
+            await Promise.all(updateServerPromises);
+
+            try {
+                const response = await fetch(`http://localhost:3000/management/servers/updateIsTestRunnerServerByIp/${deletedCluster.testRunnerServer}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update test runner server: ${response.statusText}`);
+                }
+            }
+            catch (error) {
+                console.error('Error updating test runner server:', error);
+            }
+
+            // Perform cluster deletion here (e.g., using a DELETE request)
+            const updatedServers = await fetchServersData();
+            const updatedClusters = await fetchClustersData();
+            setServers(updatedServers);
+            setClusters(updatedClusters);
+            closeClusterForm();
+        } catch (error) {
+            console.error('Error handling deleted cluster:', error);
+        }
+    };
+
+    const handleClusterUpdated = async (updatedCluster) => {
+        try {
+            // Perform cluster update here (e.g., using a PUT request)
+            const updatedClusters = await fetchClustersData();
+            const updatedServers = await fetchServersData();
+            setClusters(updatedClusters);
+            setServers(updatedServers);
+        } catch (error) {
+            console.error('Error handling updated cluster:', error);
+        }
+    };
+
+    const handleClusterAdded = async (newCluster) => {
+        try {
+            // Update the 'clusterConnectedTo' field for each server
+            const updateServerPromises = newCluster.servers.map(async (server) => {
+                console.log('Updating server:', server);
+                const response = await fetch(`http://localhost:3000/management/servers/updateTheClusterConnectedToByIp/${server}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ clusterConnectedTo: newCluster }),
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update server ${server}: ${response.statusText}`);
+                }
+            });
+
+            // Wait for all server updates to complete
+            await Promise.all(updateServerPromises);
+
+            try {
+                const response = await fetch(`http://localhost:3000/management/servers/updateIsTestRunnerServerByIp/${newCluster.testRunnerServer}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                });
+
+                if (!response.ok) {
+                    throw new Error(`Failed to update test runner server: ${response.statusText}`);
+                }
+            }
+            catch (error) {
+                console.error('Error updating test runner server:', error);
+            }
+
+            // Perform cluster addition here (e.g., using a POST request)
+            const updatedServers = await fetchServersData();
+            const updatedClusters = await fetchClustersData();
+            setServers(updatedServers);
+            setClusters(updatedClusters);
+        } catch (error) {
+            console.error('Error handling added cluster:', error);
+        }
+    };
+
     return (
         <div className="management-container">
             <h1>Resources Management</h1>
-            <button onClick={openForm}>Add Server</button>
-            {isFormOpen && (
-                isAdding ? (
+
+            {/* Servers Section */}
+            <h2>Servers</h2>
+            <button onClick={openServerForm}>Add Server</button>
+            {isServerFormOpen && (
+                isAddingServer ? (
                     <ServerForm
-                        closeForm={closeForm}
+                        closeForm={closeServerForm}
                         onServerAdded={handleServerAdded} // Handler for saving new servers
                     />
                 ) : (
                     <EditServerForm
                         server={editingServer} // Passing the server object for editing
-                        closeForm={closeForm}
+                        closeForm={closeServerForm}
                         saveServer={handleServerUpdated} // Handler for saving updates
                     />
                 )
             )}
-            {isDeleteFormOpen && (
+            {isDeleteServerFormOpen && (
                 <DeleteServerForm
                     server={serverToDelete}
-                    closeForm={closeForm}
+                    closeForm={closeServerForm}
                     deleteServer={handleServerDelete} // Handler for deleting servers
                 />
             )}
-
-            <h2>Servers</h2>
             <table className="servers-table">
                 <thead>
                     <tr>
                         <th>Server ID</th>
                         <th>IP Address</th>
                         <th>Description</th>
+                        <th>Is Test Runner</th>
                         <th>Cluster Connected To</th>
                         <th>Date Created</th>
                         <th>Time Created</th>
@@ -140,19 +307,104 @@ const Management = () => {
                             <td>{server.serverId}</td>
                             <td>{server.serverIp}</td>
                             <td>{server.serverDescription}</td>
-                            <td>{server.clusterConnectedTo}</td>
+                            <td>{server.isTestRunner ? 'Yes' : 'No'}</td>
+                            <td>
+                            {(() => {
+                                const cluster = clusters.find(cluster => cluster._id === server.clusterConnectedTo);
+                                return cluster ? cluster.clusterName : '-';
+                            })()}
+                            </td>
                             <td>{server.createdDate}</td>
                             <td>{server.createdTime}</td>
                             <td>
-                                <button className='action-btn edit-btn' onClick={() => openEditForm(server)}>Edit</button>
+                                <button className='action-btn edit-btn' onClick={() => openEditServerForm(server)}>Edit</button>
                             </td>
                             <td>
-                                <button className="action-btn delete-btn" onClick={() => openDeleteForm(server)}>Delete</button>
+                                <button className="action-btn delete-btn" onClick={() => openDeleteServerForm(server)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
+
+            {/* Clusters Section */}
+            <h2>Clusters</h2>
+            <button onClick={openClusterForm}>Add Cluster</button>
+            {isClusterFormOpen && (
+                isAddingCluster ? (
+                    <ClusterForm
+                        closeForm={closeClusterForm}
+                        onClusterAdded={handleClusterAdded} // Handler for saving new clusters
+                    />
+                ) : (
+                    <EditClusterForm
+                        cluster={editingCluster} // Passing the cluster object for editing
+                        closeForm={closeClusterForm}
+                        saveCluster={handleClusterUpdated} // Handler for saving updates
+                    />
+                )
+            )}
+            {isDeleteClusterFormOpen && (
+                <DeleteClusterForm
+                    cluster={clusterToDelete}
+                    closeForm={closeClusterForm}
+                    deleteCluster={handleClusterDelete} // Handler for deleting clusters
+                />
+            )}
+            <table className="clusters-table">
+                <thead>
+                    <tr>
+                        <th>Cluster ID</th>
+                        <th>Cluster Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Servers</th>
+                        <th>Test Runner</th>
+                        <th>Date Created</th>
+                        <th>Time Created</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {clusters.map(cluster => (
+                        <tr key={cluster.clusterId}>
+                            <td>{cluster.clusterId}</td>
+                            <td>{cluster.clusterName}</td>
+                            <td>{cluster.clusterDescription}</td>
+                            <td>{cluster.clusterStatus}</td>
+                            <td>
+                                <ul>
+                                    {cluster.servers.map((serverId, index) => {
+                                        const matchingServer = servers.find(server => server._id === serverId);
+                                        return (
+                                            <li key={index}>
+                                                {matchingServer ? matchingServer.serverIp : '-'}
+                                            </li>
+                                        );
+                                    })}
+                                </ul>
+                            </td>
+                            <td>
+                                {(() => {
+                                    const testRunner = servers.find(server => server._id === cluster.testRunnerServer);
+                                    return testRunner ? testRunner.serverIp : 'N/A';
+                                })()}
+                            </td>
+                            <td>{cluster.createdDate}</td>
+                            <td>{cluster.createdTime}</td>
+                            <td>
+                                <button className='action-btn edit-btn' onClick={() => openEditClusterForm(cluster)}>Edit</button>
+                            </td>
+                            <td>
+                                <button className="action-btn delete-btn" onClick={() => openDeleteClusterForm(cluster)}>Delete</button>
+                            </td>
+                        </tr>
+                    ))}
+                    
+                </tbody>
+            </table>
+
         </div>
     );
 };

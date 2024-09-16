@@ -26,7 +26,7 @@ exports.addServer = async (req, res) => {
         const newServer = new Server({
             serverIp,
             serverDescription,
-            clusterConnectedTo: "-",
+            clusterConnectedTo: null,
             createdDate,
             createdTime
         });
@@ -94,6 +94,71 @@ exports.updateServerById = async (req, res) => {
         console.error('Error updating server:', error);
         res.status(500).json({
             message: 'Error updating server',
+            error: error.message
+        });
+    }
+};
+
+exports.updateTheClusterConnectedToByIp = async (req, res) => {
+    try {
+        const serverIp = req.params.serverIp;
+        const { clusterConnectedTo } = req.body;
+
+        const updatedServer = await Server.findOneAndUpdate(
+            { _id: serverIp },
+            { clusterConnectedTo },
+            { new: true }
+        );
+
+        console.log('updatedServer:', updatedServer);
+
+        if (updatedServer) {
+            res.status(200).json({
+                message: 'Cluster connected to updated successfully',
+                server: updatedServer
+            });
+        } else {
+            res.status(404).json({ message: 'Server not found' });
+        }
+    } catch (error) {
+        console.error('Error updating cluster connected to:', error);
+        res.status(500).json({
+            message: 'Error updating cluster connected to',
+            error: error.message
+        });
+    }
+};
+
+exports.updateIsTestRunnerServerByIp = async (req, res) => {
+    try {
+        const serverIp = req.params.clusterName;
+        console.log('updateIsTestRunnerServerByIp :', serverIp);
+
+        // Find the server by IP
+        const server = await Server.findOne({ _id: serverIp});
+        
+        if (!server) {
+            return res.status(404).json({ message: 'Server not found' });
+        }
+
+        // Flip the isTestRunnerServer boolean value
+        const newIsTestRunner = !server.isTestRunner;
+
+        // Update the server with the new boolean value
+        const updatedServer = await Server.findOneAndUpdate(
+            { _id: serverIp },
+            { isTestRunner: newIsTestRunner },
+            { new: true }
+        );
+
+        res.status(200).json({
+            message: 'Test runner server updated successfully',
+            server: updatedServer
+        });
+    } catch (error) {
+        console.error('Error updating test runner server:', error);
+        res.status(500).json({
+            message: 'Error updating test runner server',
             error: error.message
         });
     }

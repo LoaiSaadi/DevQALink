@@ -46,7 +46,9 @@ app.use('/builds', buildsRoutes);
 
 // Management routes
 const serversRoutes = require('./routes/managementRoutes/serversRoute');
+const clustersRoutes = require('./routes/managementRoutes/clustersRoute');
 app.use('/management/servers', serversRoutes);
+app.use('/management/clusters', clustersRoutes);
 
 
 const poolsRoutes = require('./routes/pools');
