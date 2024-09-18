@@ -126,6 +126,58 @@ button:hover {
 }
 
 
+
+
+/* Pools */
+.pools-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px; /* Space between button and table */
+}
+
+.pools-table th, .pools-table td {
+    border: 1px solid #ddd;
+    padding: 12px; /* Increased padding for better readability */
+    text-align: center;
+}
+
+.pools-table th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+}
+
+.pools-table td button {
+    padding: 8px 12px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 14px; /* Slightly larger font size */
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 0 5px; /* Space between buttons */
+}
+
+
+/* Edit Button */
+.clusters-table td .edit-btn {
+    background-color: #4CAF50; /* Green for editing */
+}
+
+.clusters-table td .edit-btn:hover {
+    background-color: #45a049; /* Slightly darker green */
+}
+
+/* Delete Button */
+.clusters-table td .delete-btn {
+    background-color: #f44336; /* Red for deletion */
+}
+
+.clusters-table td .delete-btn:hover {
+    background-color: #d32f2f; /* Slightly darker red */
+}
+
+
 /* Responsive Design */
 @media (max-width: 600px) {
     .tests-table th, .tests-table td {

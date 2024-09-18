@@ -6,10 +6,10 @@ const clusterSchema = new mongoose.Schema({
     clusterName: { type: String, required: true },
     clusterDescription: { type: String, required: true },
     clusterStatus: { type: String, enum: ['Available', 'Unavailable '], default: 'Available' },
-    //servers: [{ type: String, required: true }],
     servers: [{ type: Schema.Types.ObjectId, ref: 'Server' }], 
-    //testRunnerServer: { type: String, required: true },
     testRunnerServer: { type: Schema.Types.ObjectId, ref: 'Server' },
+    poolConnectedTo: { type: Schema.Types.ObjectId, ref: 'Pool' },
+    serversNumber: { type: Number, required: true },
     createdDate: { type: String, required: true },  // Date in YYYY-MM-DD format
     createdTime: { type: String, required: true },  // Time in HH:MM:SS format
 });

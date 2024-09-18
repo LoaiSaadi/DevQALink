@@ -4,39 +4,41 @@ import './EditClusterForm.css';
 const EditClusterForm = ({ cluster = {}, closeForm, saveCluster }) => {
     console.log('EditClusterForm cluster:', cluster);
 
-    // Initialize form data
+    // Initialize form data with the existing cluster data
     const [formData, setFormData] = useState({
         clusterName: cluster.clusterName || '',
         clusterDescription: cluster.clusterDescription || '',
         clusterStatus: cluster.clusterStatus || 'Available',
-        servers: cluster.servers || [],  // Array of Object IDs
-        testRunnerServer: cluster.testRunnerServer || '',  // Object ID
-        createdDate: cluster.createdDate || '',
-        createdTime: cluster.createdTime || '',
+        poolConnectedTo: cluster.poolConnectedTo || '',
+        servers: cluster.servers || [],  // Array of selected server objects
+        testRunnerServer: cluster.testRunnerServer || '',  // Selected test runner server object
+        createdDate: cluster.createdDate || new Date().toISOString().split('T')[0],
+        createdTime: cluster.createdTime || new Date().toLocaleTimeString('en-GB', { hour12: false }),
     });
 
+    // const [availableServers, setAvailableServers] = useState([]); // Available servers for selection
     const formRef = useRef(null);
 
     // Handle form data changes
     const handleChange = (e) => {
         const { name, value } = e.target;
-        setFormData({
-            ...formData,
+        setFormData(prevData => ({
+            ...prevData,
             [name]: value,
-        });
+        }));
     };
 
+    // Handle form submission
     const handleSubmit = async (e) => {
         e.preventDefault();
+
         // Validation: Ensure required fields are not empty
-        if (!formData.clusterName || !formData.clusterDescription || !formData.createdDate || !formData.createdTime) {
+        if (!formData.clusterName || !formData.clusterDescription || !formData.testRunnerServer || !formData.createdDate || !formData.createdTime) {
             alert('Please fill out all required fields.');
-            return; // Exit the function without submitting the form
+            return;
         }
 
-        const clusterData = {
-            ...formData
-        };
+        const clusterData = { ...formData };
 
         try {
             const response = await fetch(`http://localhost:3000/management/clusters/updateClusterById/${cluster.clusterId}`, {
@@ -49,8 +51,7 @@ const EditClusterForm = ({ cluster = {}, closeForm, saveCluster }) => {
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('Cluster updated successfully!');
-                console.log('Cluster ID:', result.cluster._id);
+                console.log('Cluster updated successfully:', result.cluster);
 
                 if (saveCluster) {
                     saveCluster(result.cluster);
@@ -65,6 +66,7 @@ const EditClusterForm = ({ cluster = {}, closeForm, saveCluster }) => {
         }
     };
 
+    // Close the form if the user clicks outside of it
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (formRef.current && !formRef.current.contains(e.target)) {
@@ -111,7 +113,6 @@ const EditClusterForm = ({ cluster = {}, closeForm, saveCluster }) => {
                         <button type="submit" className="submit-btn">Save Changes</button>
                         <button type="button" className="cancel-btn" onClick={closeForm}>Cancel</button>
                     </div>
-
                 </form>
             </div>
         </div>

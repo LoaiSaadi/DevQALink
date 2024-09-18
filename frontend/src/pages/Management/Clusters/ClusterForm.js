@@ -6,6 +6,7 @@ const ClusterForm = ({ closeForm, onClusterAdded }) => {
         clusterName: '',
         clusterDescription: '',
         clusterStatus: 'Available', // Default status
+        poolConnectedTo: '', // Automatically set to empty
         createdDate: new Date().toISOString().split('T')[0], // Set default date to today
         createdTime: new Date().toLocaleTimeString('en-GB', { hour12: false }), // Set default time to now
         servers: [], // Add a field for selected servers
@@ -22,7 +23,7 @@ const ClusterForm = ({ closeForm, onClusterAdded }) => {
                 const response = await fetch('http://localhost:3000/management/servers/allServers');
                 if (response.ok) {
                     const serverData = await response.json();
-                    // Filter servers where clusterConnectedTo is not "-"
+                    // Filter servers where clusterConnectedTo is not null
                     const availableServers = serverData.filter(server => server.clusterConnectedTo === null);
                     setServers(availableServers);
                 } else {

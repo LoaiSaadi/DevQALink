@@ -47,12 +47,14 @@ app.use('/builds', buildsRoutes);
 // Management routes
 const serversRoutes = require('./routes/managementRoutes/serversRoute');
 const clustersRoutes = require('./routes/managementRoutes/clustersRoute');
+const poolsRoutes = require('./routes/managementRoutes/poolsRoute');
 app.use('/management/servers', serversRoutes);
 app.use('/management/clusters', clustersRoutes);
+app.use('/management/pools', poolsRoutes);
 
 
-const poolsRoutes = require('./routes/pools');
-app.use('/pools', poolsRoutes);
+// const poolsRoutes = require('./routes/pools');
+// app.use('/pools', poolsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

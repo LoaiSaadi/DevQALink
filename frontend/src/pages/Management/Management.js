@@ -9,6 +9,11 @@ import EditClusterForm from './Clusters/EditClusterForm'; // Import EditClusterF
 import ClusterForm from './Clusters/ClusterForm'; // Import ClusterForm for adding new clusters
 import DeleteClusterForm from './Clusters/DeleteClusterForm'; // Import DeleteClusterForm for deleting clusters
 
+import EditPoolForm from './Pools/EditPoolForm';
+import PoolForm from './Pools/PoolForm';
+import DeletePoolForm from './Pools/DeletePoolForm';
+
+
 const fetchServersData = async () => {
     try {
         const response = await fetch('http://localhost:3000/management/servers/allServers');
@@ -37,6 +42,21 @@ const fetchClustersData = async () => {
     }
 };
 
+// Fetch pools data from the backend
+const fetchPoolsData = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/management/pools/allPools');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching pools data:', error);
+        throw error;
+    }
+};
+
 const Management = () => {
     // States for servers
     const [servers, setServers] = useState([]);
@@ -54,6 +74,14 @@ const Management = () => {
     const [isDeleteClusterFormOpen, setIsDeleteClusterFormOpen] = useState(false); // State for delete form
     const [clusterToDelete, setClusterToDelete] = useState(null); // State to store the cluster to delete
 
+    // States for pools
+    const [pools, setPools] = useState([]);
+    const [isPoolFormOpen, setIsPoolFormOpen] = useState(false);
+    const [isAddingPool, setIsAddingPool] = useState(true);
+    const [editingPool, setEditingPool] = useState(null);
+    const [isDeletePoolFormOpen, setIsDeletePoolFormOpen] = useState(false);
+    const [poolToDelete, setPoolToDelete] = useState(null); 
+
     useEffect(() => {
         const fetchData = async () => {
             try {
@@ -61,6 +89,8 @@ const Management = () => {
                 setServers(serversData);
                 const clustersData = await fetchClustersData();
                 setClusters(clustersData);
+                const poolsData = await fetchPoolsData();
+                setPools(poolsData);
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -68,6 +98,23 @@ const Management = () => {
 
         fetchData();
     }, []);
+
+    
+    // useEffect(() => {
+    //     const fetchData = async () => {
+    //         try {
+    //             const poolsData = await fetchPoolsData();
+    //             setPools(poolsData);
+    //             const clustersData = await fetchClustersData();
+    //             setClusters(clustersData);
+    //         } catch (error) {
+    //             console.error('Error fetching data:', error);
+    //         }
+    //     };
+
+    //     fetchData();
+    // }, []);
+
 
     // Server form handlers
     const openServerForm = () => {
@@ -97,9 +144,12 @@ const Management = () => {
     const handleServerDelete = async () => {
         try {
             // Perform server deletion here (e.g., using a DELETE request)
-            await fetchServersData(); // Refetch server data to update the list
             const updatedServers = await fetchServersData();
+            const updatedClusters = await fetchClustersData();
+            const updatedPools = await fetchPoolsData();
             setServers(updatedServers);
+            setClusters(updatedClusters);
+            setPools(updatedPools);
             closeServerForm();
         } catch (error) {
             console.error('Error handling deleted server:', error);
@@ -153,6 +203,104 @@ const Management = () => {
         setIsDeleteClusterFormOpen(true);
     };
 
+    // Pool form handlers
+    const openPoolForm = () => {
+        setIsAddingPool(true);
+        setIsPoolFormOpen(true);
+    };
+
+    const closePoolForm = () => {
+        setIsPoolFormOpen(false);
+        setIsAddingPool(true);
+        setEditingPool(null);
+        setIsDeletePoolFormOpen(false);
+        setPoolToDelete(null);
+    };
+
+    const openEditPoolForm = (pool) => {
+        setEditingPool(pool);
+        setIsAddingPool(false);
+        setIsPoolFormOpen(true);
+    };
+
+    const openDeletePoolForm = (pool) => {
+        setPoolToDelete(pool);
+        setIsDeletePoolFormOpen(true);
+    };
+
+    const handlePoolAdded = async (newPool) => {
+        try {
+            // Update the 'poolConnectedTo' field for each cluster
+            const updateClusterPromises = newPool.clusters.map(async (cluster) => {
+                console.log('Updating cluster:', cluster);
+                const response = await fetch(`http://localhost:3000/management/clusters/updateThePoolConnectedToById/${cluster}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ poolConnectedTo: newPool }), // Now updating poolConnectedTo field
+                });
+        
+                if (!response.ok) {
+                    throw new Error(`Failed to update cluster ${cluster}: ${response.statusText}`);
+                }
+            });
+        
+            // Wait for all cluster updates to complete
+            await Promise.all(updateClusterPromises);
+        
+            // Perform any additional actions like fetching updated data
+            const updatedServers = await fetchServersData();
+            const updatedClusters = await fetchClustersData();
+            const updatedPools = await fetchPoolsData();
+            setServers(updatedServers);
+            setClusters(updatedClusters);
+            setPools(updatedPools);
+        } catch (error) {
+            console.error('Error handling added pool:', error);
+        }
+        
+
+
+        const updatedPools = await fetchPoolsData();
+        const updatedClusters = await fetchClustersData();
+        setPools(updatedPools);
+        setClusters(updatedClusters);
+    };
+
+    const handlePoolUpdated = async () => {
+        const updatedPools = await fetchPoolsData();
+        const updatedClusters = await fetchClustersData();
+        setPools(updatedPools);
+        setClusters(updatedClusters);
+    };
+
+    const handlePoolDelete = async (deletedPool) => {
+        // Update the 'poolConnectedTo' field for each cluster
+        const updateClusterPromises = deletedPool.clusters.map(async (clusterId) => {
+            const response = await fetch(`http://localhost:3000/management/clusters/updateThePoolConnectedToById/${clusterId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ poolConnectedTo: null }), // Set 'poolConnectedTo' to null
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update cluster ${clusterId}: ${response.statusText}`);
+            }
+        });
+
+        // Wait for all cluster updates to complete
+        await Promise.all(updateClusterPromises);
+
+        const updatedPools = await fetchPoolsData();
+        const updatedClusters = await fetchClustersData();
+        setPools(updatedPools);
+        setClusters(updatedClusters);
+        closePoolForm();
+    };
+
     const handleClusterDelete = async (deletedCluster) => {
         try {
             // Update the 'clusterConnectedTo' field for each server
@@ -189,11 +337,23 @@ const Management = () => {
                 console.error('Error updating test runner server:', error);
             }
 
+            // try {
+            //     const response = await fetch(`http://localhost:3000/management/clusters/updateClusterById/${deletedCluster._id}`, {
+            //         method: 'PUT',
+            //         headers: {
+            //             'Content-Type': 'application/json',
+            //         },
+            //         body: JSON.stringify({ isDeleted: true }),
+            //     )
+            // }
+
             // Perform cluster deletion here (e.g., using a DELETE request)
             const updatedServers = await fetchServersData();
             const updatedClusters = await fetchClustersData();
+            const updatedPools = await fetchPoolsData();
             setServers(updatedServers);
             setClusters(updatedClusters);
+            setPools(updatedPools);
             closeClusterForm();
         } catch (error) {
             console.error('Error handling deleted cluster:', error);
@@ -205,8 +365,10 @@ const Management = () => {
             // Perform cluster update here (e.g., using a PUT request)
             const updatedClusters = await fetchClustersData();
             const updatedServers = await fetchServersData();
+            const updatedPools = await fetchPoolsData();
             setClusters(updatedClusters);
             setServers(updatedServers);
+            setPools(updatedPools);
         } catch (error) {
             console.error('Error handling updated cluster:', error);
         }
@@ -252,8 +414,10 @@ const Management = () => {
             // Perform cluster addition here (e.g., using a POST request)
             const updatedServers = await fetchServersData();
             const updatedClusters = await fetchClustersData();
+            const updatedPools = await fetchPoolsData();
             setServers(updatedServers);
             setClusters(updatedClusters);
+            setPools(updatedPools);
         } catch (error) {
             console.error('Error handling added cluster:', error);
         }
@@ -359,7 +523,9 @@ const Management = () => {
                         <th>Description</th>
                         <th>Status</th>
                         <th>Servers</th>
+                        <th>Pool Connected To</th>
                         <th>Test Runner</th>
+                        <th>Servers Number</th>
                         <th>Date Created</th>
                         <th>Time Created</th>
                         <th>Edit</th>
@@ -383,14 +549,27 @@ const Management = () => {
                                             </li>
                                         );
                                     })}
+                                    
                                 </ul>
+                            </td>
+                            <td>
+                                {/* {(() => {
+                                    const cluster = clusters.find(cluster => cluster._id === server.clusterConnectedTo);
+                                    return cluster ? cluster.clusterName : '-';
+                                })()} */}
+
+                                {(() => {
+                                    const pool = pools.find(pool => pool._id === cluster.poolConnectedTo);
+                                    return pool ? pool.poolName : '-';
+                                })()}
                             </td>
                             <td>
                                 {(() => {
                                     const testRunner = servers.find(server => server._id === cluster.testRunnerServer);
-                                    return testRunner ? testRunner.serverIp : 'N/A';
+                                    return testRunner ? testRunner.serverIp : '-';
                                 })()}
                             </td>
+                            <td>{cluster.serversNumber}</td>
                             <td>{cluster.createdDate}</td>
                             <td>{cluster.createdTime}</td>
                             <td>
@@ -402,6 +581,90 @@ const Management = () => {
                         </tr>
                     ))}
                     
+                </tbody>
+            </table>
+
+            {/* Pools Section */}
+            <h2>Pools</h2>
+            <button onClick={openPoolForm}>Add Pool</button>
+            {isPoolFormOpen && (
+                isAddingPool ? (
+                    <PoolForm closeForm={closePoolForm} onPoolAdded={handlePoolAdded} />
+                ) : (
+                    <EditPoolForm pool={editingPool} closeForm={closePoolForm} savePool={handlePoolUpdated} />
+                )
+            )}
+            {isDeletePoolFormOpen && (
+                <DeletePoolForm pool={poolToDelete} closeForm={closePoolForm} deletePool={handlePoolDelete} />
+            )}
+            <table className="pools-table">
+                <thead>
+                    <tr>
+                        <th>Pool ID</th>
+                        <th>Pool Name</th>
+                        <th>Description</th>
+                        <th>Status</th>
+                        <th>Clusters</th>
+                        <th>Clusters Number</th>
+                        <th>Servers Number</th>
+                        <th>Date Created</th>
+                        <th>Time Created</th>
+                        <th>Edit</th>
+                        <th>Delete</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {pools.map(pool => (
+                        <tr key={pool.poolId}>
+                            <td>{pool.poolId}</td>
+                            <td>{pool.poolName}</td>
+                            <td>{pool.poolDescription}</td>
+                            <td>{pool.poolStatus}</td>
+                            <td>
+                                {/* <ul>
+                                    {pool.clusters.map((clusterId, index) => {
+                                        const matchingCluster = clusters.find(cluster => cluster._id === clusterId);
+                                        return (
+                                            <li key={index}>
+                                                {matchingCluster ? matchingCluster.clusterName : '-'}
+                                            </li>
+                                        );
+                                    })}
+
+                                </ul> */}
+
+                                
+                                <div className="clusters-list">
+                                    {pool.clusters && pool.clusters.length > 0 ? (
+                                        <ul>
+                                            {pool.clusters.map((clusterId, index) => {
+                                                const matchingCluster = clusters.find(cluster => cluster._id === clusterId);
+                                                return (
+                                                    <li key={index}>
+                                                        {matchingCluster ? matchingCluster.clusterName : '-'}
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    ) : (
+                                        <div className="no-clusters">-</div>
+                                    )}
+                                </div>
+
+
+                            </td>
+                            <td>{pool.clustersNumber}</td>
+                            <td>{pool.serversNumber}</td>
+                            <td>{pool.createdDate}</td>
+                            <td>{pool.createdTime}</td>
+                            <td>
+                                <button className="action-btn edit-btn" onClick={() => openEditPoolForm(pool)}>Edit</button>
+                            </td>
+                            <td>
+                                <button className="action-btn delete-btn" onClick={() => openDeletePoolForm(pool)}>Delete</button>
+                            </td>
+                        </tr>
+                    ))}
                 </tbody>
             </table>
 

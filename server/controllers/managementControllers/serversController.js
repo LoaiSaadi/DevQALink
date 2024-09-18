@@ -74,11 +74,11 @@ exports.deleteServerById = async (req, res) => {
 exports.updateServerById = async (req, res) => {
     try {
         const serverId = req.params.serverId;
-        const { serverIp, serverDescription, clusterConnectedTo } = req.body;
+        const { serverIp, serverDescription } = req.body;
 
         const updatedServer = await Server.findOneAndUpdate(
             { serverId },
-            { serverIp, serverDescription, clusterConnectedTo },
+            { serverIp, serverDescription },
             { new: true }
         );
 
@@ -101,8 +101,11 @@ exports.updateServerById = async (req, res) => {
 
 exports.updateTheClusterConnectedToByIp = async (req, res) => {
     try {
+        console.log('updateTheClusterConnectedToByIp req.params:', req.params);
         const serverIp = req.params.serverIp;
+        console.log('updateTheClusterConnectedToByIp serverIp:', serverIp);
         const { clusterConnectedTo } = req.body;
+        console.log('updateTheClusterConnectedToByIp clusterConnectedTo:', clusterConnectedTo);
 
         const updatedServer = await Server.findOneAndUpdate(
             { _id: serverIp },

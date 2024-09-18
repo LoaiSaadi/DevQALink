@@ -7,23 +7,46 @@ const DeleteServerForm = ({ server, closeForm, deleteServer }) => {
     // Function to handle the delete operation
     const handleDelete = async () => {
         try {
-            // Sending a DELETE request to the server
-            const response = await fetch(`http://localhost:3000/management/servers/deleteServerById/${server.serverId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
+            console.log('Server to delete id', server._id);
+            console.log('Server to delete ip', server.serverIp);   
+            console.log('Server is connected to cluster:', server.clusterConnectedTo);
+            if (server.clusterConnectedTo != null) {
+                const response = await fetch(`http://localhost:3000/management/clusters/removeServerFromClusterById/${server.clusterConnectedTo}`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ server })
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
-
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
             }
+            if (!server.isTestRunner) {
+                // Sending a DELETE request to the server
+                const response = await fetch(`http://localhost:3000/management/servers/deleteServerById/${server.serverId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
 
-            const result = await response.json();
-            console.log(result.message); // Log the success message (optional)
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+
+                const result = await response.json();
+                console.log(result.message); // Log the success message (optional)
+            }
+            else {
+                alert('Please select a valid server. The server is server runner.');
+                return; // Exit the function without submitting the form
+            }
 
             deleteServer(server.serverId); // Update the parent component's state by removing the server
             closeForm(); // Close the form after deletion
+
         } catch (error) {
             console.error('Error deleting server:', error);
         }

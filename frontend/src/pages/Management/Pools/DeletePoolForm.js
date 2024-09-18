@@ -1,28 +1,14 @@
 import React, { useEffect, useRef } from 'react';
-import './DeleteClusterForm.css'; // Make sure to update the CSS file name if needed
+import './DeletePoolForm.css'; // Make sure to update the CSS file name if needed
 
-const DeleteClusterForm = ({ cluster, closeForm, deleteCluster }) => {
+const DeletePoolForm = ({ pool, closeForm, deletePool }) => {
     const formRef = useRef(null);
 
     // Function to handle the delete operation
     const handleDelete = async () => {
         try {
-            if (cluster.poolConnectedTo != null) {
-                const response = await fetch(`http://localhost:3000/management/pools/removeClusterFromPoolById/${cluster.poolConnectedTo}`, {
-                    method: 'PUT',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ cluster })
-                });
-
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-            }
-
-            // Sending a DELETE request to the cluster
-            const response = await fetch(`http://localhost:3000/management/clusters/deleteClusterById/${cluster.clusterId}`, {
+            // Sending a DELETE request to the pool
+            const response = await fetch(`http://localhost:3000/management/pools/deletePoolById/${pool.poolId}`, {
                 method: 'DELETE',
                 headers: {
                     'Content-Type': 'application/json'
@@ -36,11 +22,11 @@ const DeleteClusterForm = ({ cluster, closeForm, deleteCluster }) => {
             const result = await response.json();
             console.log(result.message); // Log the success message (optional)
 
-            // deleteCluster(cluster.clusterId); // Update the parent component's state by removing the cluster
-            deleteCluster(cluster); // Update the parent component's state by removing the cluster
+            // deletePool(pool.poolId); // Update the parent component's state by removing the pool
+            deletePool(pool); // Update the parent component's state by removing the pool
             closeForm(); // Close the form after deletion
         } catch (error) {
-            console.error('Error deleting cluster:', error);
+            console.error('Error deleting pool:', error);
         }
     };
 
@@ -60,8 +46,8 @@ const DeleteClusterForm = ({ cluster, closeForm, deleteCluster }) => {
         <div className="form-overlay">
             <div className="form-card" ref={formRef}>
                 <button className="close-btn" onClick={closeForm}>&times;</button>
-                <h2>Delete Cluster</h2>
-                <p>Are you sure you want to delete the cluster "{cluster.clusterName}"?</p>
+                <h2>Delete Pool</h2>
+                <p>Are you sure you want to delete the pool "{pool.poolName}"?</p>
                 <div className="btn-container">
                     <button className="delete-btn" onClick={handleDelete}>Delete</button>
                     <button className="cancel-btn" onClick={closeForm}>Cancel</button>
@@ -71,4 +57,4 @@ const DeleteClusterForm = ({ cluster, closeForm, deleteCluster }) => {
     );
 };
 
-export default DeleteClusterForm;
+export default DeletePoolForm;

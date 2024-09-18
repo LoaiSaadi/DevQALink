@@ -1,13 +1,21 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './ServerForm.css';
+import './EditPoolForm.css';
 
-const ServerForm = ({ closeForm, onServerAdded }) => {
+const EditPoolForm = ({ pool = {}, closeForm, savePool }) => {
+    console.log('EditPoolForm pool:', pool);
+
+    // Initialize form data with the existing pool data
     const [formData, setFormData] = useState({
-        serverIp: '',
-        serverDescription: '',
-        clusterConnectedTo: '',
+        poolName: pool.poolName || '',
+        poolDescription: pool.poolDescription || '',
+        poolStatus: pool.poolStatus || 'Available',
+        clusters: pool.clusters || [],  // Array of selected cluster objects
+        clustersNumber: pool.clustersNumber || 0,
+        serversNumber: pool.serversNumber || 0,
+        createdDate: pool.createdDate || new Date().toISOString().split('T')[0],  // Set default date to today's date
+        createdTime: pool.createdTime || new Date().toLocaleTimeString('en-GB', { hour12: false }),  // Set default time to current time
     });
-    
+
     const formRef = useRef(null);
 
     // Handle form data changes
@@ -15,7 +23,7 @@ const ServerForm = ({ closeForm, onServerAdded }) => {
         const { name, value } = e.target;
         setFormData(prevData => ({
             ...prevData,
-            [name]: value
+            [name]: value,
         }));
     };
 
@@ -24,43 +32,40 @@ const ServerForm = ({ closeForm, onServerAdded }) => {
         e.preventDefault();
 
         // Validation: Ensure required fields are not empty
-        if (!formData.serverIp || !formData.serverDescription) {
+        if (!formData.poolName || !formData.poolDescription) {
             alert('Please fill out all required fields.');
-            return; // Exit the function without submitting the form
+            return;
         }
-        
-        console.log('Form data:', formData);
-        const serverData = {
-            ...formData,
-        };
+
+        const poolData = { ...formData };
 
         try {
-            const response = await fetch('http://localhost:3000/management/servers/addServer', {
-                method: 'POST',
+            const response = await fetch(`http://localhost:3000/management/pools/updatePoolById/${pool.poolId}`, {
+                method: 'PUT',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(serverData),
+                body: JSON.stringify(poolData),
             });
 
             if (response.ok) {
                 const result = await response.json();
-                console.log('Server added successfully:', result.server);
-                console.log('Server ID:', result.server.serverId);
-                
-                if (onServerAdded) {
-                    onServerAdded(result.server);
+                console.log('Pool updated successfully:', result.pool);
+
+                if (savePool) {
+                    savePool(result.pool);
                 }
 
                 closeForm();
             } else {
-                console.error('Failed to add server:', response.statusText);
+                console.error('Failed to update pool:', response.statusText);
             }
         } catch (error) {
-            console.error('Error occurred while adding server:', error);
+            console.error('Error occurred while updating pool:', error);
         }
     };
 
+    // Close the form if the user clicks outside of it
     useEffect(() => {
         const handleClickOutside = (e) => {
             if (formRef.current && !formRef.current.contains(e.target)) {
@@ -77,41 +82,40 @@ const ServerForm = ({ closeForm, onServerAdded }) => {
             <div className="form-card" ref={formRef}>
                 <button className="close-btn" onClick={closeForm}>&times;</button>
                 <form className="form-container" onSubmit={handleSubmit}>
-                    <h2>Add New Server</h2>
+                    <h2>Edit Pool</h2>
 
                     <div className="form-row">
-                        <label htmlFor="serverIp">Server IP Address</label>
+                        <label htmlFor="poolName">Pool Name</label>
                         <input
                             type="text"
-                            id="serverIp"
-                            name="serverIp"
-                            value={formData.serverIp}
+                            id="poolName"
+                            name="poolName"
+                            value={formData.poolName}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
                     <div className="form-row">
-                        <label htmlFor="serverDescription">Server Description</label>
+                        <label htmlFor="poolDescription">Pool Description</label>
                         <input
                             type="text"
-                            id="serverDescription"
-                            name="serverDescription"
-                            value={formData.serverDescription}
+                            id="poolDescription"
+                            name="poolDescription"
+                            value={formData.poolDescription}
                             onChange={handleChange}
                             required
                         />
                     </div>
 
                     <div className="btn-container">
-                        <button type="submit" className="submit-btn">Add Test</button>
+                        <button type="submit" className="submit-btn">Save Changes</button>
                         <button type="button" className="cancel-btn" onClick={closeForm}>Cancel</button>
                     </div>
-
                 </form>
             </div>
         </div>
     );
 };
 
-export default ServerForm;
+export default EditPoolForm;
