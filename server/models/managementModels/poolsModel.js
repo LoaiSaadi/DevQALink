@@ -5,7 +5,7 @@ const Schema = mongoose.Schema;
 const poolSchema = new mongoose.Schema({
     poolName: { type: String, required: true },
     poolDescription: { type: String, required: true },
-    poolStatus: { type: String, enum: ['Available', 'Unavailable '], default: 'Available' },
+    poolStatus: { type: String, enum: ['Available', 'Unavailable', 'Running'], default: 'Available' },
     clusters: [{ type: Schema.Types.ObjectId, ref: 'Cluster' }], 
     clustersNumber: { type: Number, required: true },
     serversNumber: { type: Number, required: true },

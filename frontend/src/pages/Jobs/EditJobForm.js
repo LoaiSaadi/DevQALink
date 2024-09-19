@@ -4,23 +4,56 @@ import './EditJobForm.css';
 
 const EditJobForm = ({ job, closeForm, saveJob }) => {
     const [poolNames, setPoolNames] = useState([]);
+    const [testNames, setTestNames] = useState([]); // State to store test names
+    const [versionBuilds, setVersionBuilds] = useState([]); // State to store version builds
 
     // Fetch pool names from the database
     const fetchPoolNames = async () => {
         try {
-            const response = await fetch('http://localhost:3000/pools/getAllPools'); // Update with your API endpoint
+            const response = await fetch('http://localhost:3000/management/pools/allPools'); // Update with your API endpoint
             if (!response.ok) {
                 throw new Error(`HTTP error! status: ${response.status}`);
             }
             const data = await response.json();
-            setPoolNames(data.map(pool => pool.name)); // Assume the response structure
+            setPoolNames(data.map(pool => pool.poolName)); // Assume the response structure
         } catch (error) {
             console.error('Error fetching pool names:', error);
         }
     };
 
+    // Fetch test names from the database
+    const fetchTestNames = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/tests/allTests'); // Update with your API endpoint
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setTestNames(data.map(test => test.testTitle)); // Assume the response structure
+        } catch (error) {
+            console.error('Error fetching test names:', error);
+        }
+    };
+
+    // Fetch version builds from the database
+    const fetchVersionBuilds = async () => {
+        try {
+            const response = await fetch('http://localhost:3000/builds/allVersionBuilds'); // Update with your API endpoint
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            setVersionBuilds(data.map(build => build.buildVersion)); // Assume the response structure
+        } catch (error) {
+            console.error('Error fetching version builds:', error);
+        }
+    };
+
+
     useEffect(() => {
+        fetchTestNames();
         fetchPoolNames();
+        fetchVersionBuilds();
     }, []);
 
     // Format time helper function
@@ -209,7 +242,7 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                             required 
                         />
                     </div>
-
+{/* 
                     <div className="form-row">
                         <label htmlFor="testToRun">Tests to Run</label>
                         <input 
@@ -220,9 +253,19 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                             onChange={handleChange}
                             disabled={isReady}
                         />
-                    </div>
+                    </div> */}
 
                     <div className="form-row">
+                        <label htmlFor="testToRun">Tests to Run</label>
+                        <select id="testToRun" name="testToRun" value={formData.testToRun} onChange={handleChange} required>
+                            <option value="" disabled>Select a test</option>
+                            {testNames.map(test => (
+                                <option key={test} value={test}>{test}</option>
+                            ))}
+                        </select>
+                    </div>
+
+                    {/* <div className="form-row">
                         <label htmlFor="resourcePool">Resource Pool</label>
                         <select 
                             id="resourcePool" 
@@ -236,8 +279,18 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                                 <option key={pool} value={pool}>{pool}</option>
                             ))}
                         </select>
-                    </div>
+                    </div> */}
 
+                    <div className="form-row">
+                        <label htmlFor="resourcePool">Resource Pool</label>
+                        <select id="resourcePool" name="resourcePool" value={formData.resourcePool} onChange={handleChange} required>
+                            <option value="" disabled>Select a pool</option>
+                            {poolNames.map(pool => (
+                                <option key={pool} value={pool}>{pool}</option>
+                            ))}
+                        </select>
+                    </div>
+{/* 
                     <div className="form-row">
                         <label htmlFor="buildVersion">Build Version</label>
                         <input 
@@ -248,7 +301,18 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                             onChange={handleChange} 
                             disabled={isReady} 
                         />
+                    </div> */}
+
+                    <div className="form-row">
+                        <label htmlFor="buildVersion">Build Version</label>
+                        <select id="buildVersion" name="buildVersion" value={formData.buildVersion} onChange={handleChange} required>
+                            <option value="" disabled>Select a build version</option>
+                            {versionBuilds.map(buildVersion => (
+                                <option key={buildVersion} value={buildVersion}>{buildVersion}</option>
+                            ))}
+                        </select>
                     </div>
+
 
                     <div className="form-row">
                         <label htmlFor="jobRunType">Job Run Type</label>

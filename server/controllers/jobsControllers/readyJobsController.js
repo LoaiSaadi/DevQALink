@@ -161,3 +161,14 @@ exports.getReadyJobs = async (req, res) => {
     }
 };
 
+
+exports.getJobById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const job = await ReadyJob.findOne({ jobId });
+        res.status(200).json(job);
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

@@ -35,10 +35,24 @@ const fetchReadyJobsData = async () => {
     }
 };
 
+const fetchRunningJobsData = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/jobs/runningJobs/allRunningJobs');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching running jobs data:', error);
+        throw error;
+    }
+};
 
 const Jobs = () => {
     const [waitingJobs, setWaitingJobs] = useState([]);
     const [readyJobs, setReadyJobs] = useState([]);
+    const [runningJobs, setRunningJobs] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [isDeleteFormOpen, setIsDeleteFormOpen] = useState(false);
@@ -51,8 +65,10 @@ const Jobs = () => {
             try {
                 const waitingJobsData = await fetchWaitingJobsData();
                 const readyJobsData = await fetchReadyJobsData();
+                const runningJobsData = await fetchRunningJobsData();
                 setWaitingJobs(waitingJobsData);
                 setReadyJobs(readyJobsData);
+                setRunningJobs(runningJobsData);
             } catch (error) {
                 console.error('Error fetching job data:', error);
             }
@@ -137,6 +153,55 @@ const Jobs = () => {
         return () => cleanup();
     }, [waitingJobs, moveJobToReady]); // Only re-run when waitingJobs or moveJobToReady changes
 
+
+    // Memoize moveJobToRunning using useCallback
+    const moveJobToRunning = useCallback(async (jobId) => {
+        try {
+            // Fetch the job from ReadyJobs instead of WaitingJobs
+            const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${jobId}`); 
+            const job = await jobData.json();
+            console.log("Moving this job from ready to running: ", job);
+
+            if (job.resumeJob === "Resume") {
+                const availableCluster = await fetch(`http://localhost:3000/management/pools/findClusterAndUpdate`, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(job)
+                });
+                console.log("Available cluster HERE: ", availableCluster);
+                
+                const result = await availableCluster.json();
+                console.log("Result HERE: ", result);
+                if (result.success) {
+                    // API to insert the job into RunningJobs
+                    await fetch(`http://localhost:3000/jobs/runningJobs/addJob`, { 
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(job), // assuming job object is enough to insert it
+                    });
+                    console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
+                    
+                    // API to delete the job from ReadyJobs
+                    await fetch(`http://localhost:3000/jobs/readyJobs/deleteJobById/${jobId}`, { 
+                        method: 'DELETE',
+                    });
+                    console.log(`Job ${jobId} deleted from ReadyJobs`);
+                    
+                    handleJobDeleted(); // Update the ready jobs and running jobs lists
+                }
+                else {
+                    // throw new Error(`HTTP error! status: ${availableCluster.status}`);
+                    console.log('Error finding available cluster.');
+                }
+            }
+            
+        } catch (error) {
+            console.error(`Error moving job ${jobId} to RunningJobs:`, error);
+        }
+    }, []); // **********************************DELETED readyJobs as a dependency**********************************
+
     // // Listener for when readyJobs has jobs
     // useEffect(() => {
     //     if (readyJobs.length > 0) {
@@ -144,6 +209,10 @@ const Jobs = () => {
     //         try {
     //             const job = readyJobs[0];
     //             console.log(`Job ${job.jobId} is running...`);
+
+    //             // add job to running jobs *************************************************
+    //             moveJobToRunning(job.jobId);
+
     //             // if (job.jobRunType === 'Immediately') {
     //             //     console.log(`Job ${job.jobId} is ready to run immediately`);
     //             //     // Call the API to run the job immediately
@@ -155,12 +224,91 @@ const Jobs = () => {
     //             //     });
     //             //     console.log(`Job ${job.jobId} is running...`);
     //             // }
+
     //         } catch (error) {
     //             console.error('Error running job:', error);
     //         }   
     //     }
     // }, [readyJobs]); // This useEffect will run when readyJobs changes
 
+
+    // useEffect(() => {
+    //     if (readyJobs.length > 0) {
+    //         console.log("Ready jobs have been updated.");
+    
+    //         // Example: Starting the first job or any other relevant action
+    //         const startJob = async (job) => {
+    //             try {
+    //                 console.log(`Starting job ${job.jobId}...`);
+    //                 // Implement logic to start or process the job here
+    //                 // For example, you might want to update the job status or trigger other actions
+    //                 moveJobToRunning(job.jobId);
+    //                 // await someApiCallToStartJob(job);
+    //             } catch (error) {
+    //                 console.error('Error processing job:', error);
+    //             }
+    //         };
+    
+    //         // Process each job or a specific job from the readyJobs list
+    //         readyJobs.forEach(job => startJob(job));
+    //     }
+    // }, [readyJobs, moveJobToRunning]); // This useEffect runs whenever readyJobs changes
+    
+
+    const [processedJobs, setProcessedJobs] = useState(new Set());
+
+    // useEffect(() => {
+    //     if (readyJobs.length > 0) {
+    //         console.log("Ready jobs have been updated.");
+
+    //         const startJob = async (job) => {
+    //             if (processedJobs.has(job.jobId)) {
+    //                 return; // Skip already processed jobs
+    //             }
+
+    //             try {
+    //                 console.log(`Starting job ${job.jobId}...`);
+    //                 moveJobToRunning(job.jobId);
+    //                 setProcessedJobs(prev => new Set(prev).add(job.jobId));
+    //             } catch (error) {
+    //                 console.error('Error processing job:', error);
+    //             }
+    //         };
+
+    //         readyJobs.forEach(job => startJob(job));
+    //     }
+    // }, [readyJobs, moveJobToRunning, processedJobs]); // Added processedJobs to dependencies
+
+    useEffect(() => {
+        if (readyJobs.length > 0) {
+            console.log("Ready jobs have been updated.");
+    
+            const jobQueue = [...readyJobs]; // Copy readyJobs into a queue
+    
+            const processJobQueue = async () => {
+                while (jobQueue.length > 0) {
+                    const job = jobQueue.shift(); // Get the first job from the queue
+    
+                    if (processedJobs.has(job.jobId)) {
+                        continue; // Skip already processed jobs
+                    }
+    
+                    try {
+                        console.log(`Starting job ${job.jobId}...`);
+                        await moveJobToRunning(job.jobId); // Wait until job processing finishes
+                        setProcessedJobs(prev => new Set(prev).add(job.jobId));
+                    } catch (error) {
+                        console.error('Error processing job:', error);
+                    }
+                }
+            };
+    
+            // Start processing the job queue
+            processJobQueue();
+        }
+    }, [readyJobs, moveJobToRunning, processedJobs]);    
+   
+    
     const handleJobAdded = async (newJob) => {
         try {
             // If the added job's scheduleType is 'Immediately', move it to ReadyJobs
@@ -182,8 +330,10 @@ const Jobs = () => {
         try {
             const updatedWaitingJobs = await fetchWaitingJobsData();
             const updatedReadyJobs = await fetchReadyJobsData();
+            const updatedRunningJobs = await fetchRunningJobsData();
             setWaitingJobs(updatedWaitingJobs);
             setReadyJobs(updatedReadyJobs);
+            setRunningJobs(updatedRunningJobs);
         } catch (error) {
             console.error('Error fetching updated jobs (after deleting):', error);
         }
@@ -283,7 +433,50 @@ const Jobs = () => {
     //     return formattedTests;
     // };
 
-    const renderJobRow = (job, isWaiting) => {
+    // const renderJobRow = (job, isWaiting) => {
+    //     return (
+    //         <tr key={job.jobId}>
+    //             <td>{job.jobId}</td>
+    //             <td>{job.jobName}</td>
+    //             {/* <td dangerouslySetInnerHTML={{ __html: formatTestsToRun(job.testsToRun) }}></td> */}
+    //             <td>{job.testToRun}</td>
+    //             <td>{job.resourcePool}</td>
+    //             <td>{job.buildVersion}</td>
+    //             <td>{job.jobRunType}</td>
+    //             <td>{job.scheduleType}</td>
+    //             <td>{job.scheduleTime}</td>
+    //             <td>{job.priorityLevel}</td>                
+    //             <td>{job.createdDate}</td>
+    //             <td>{job.createdTime}</td>
+    //             <td>{job.activationStatus}</td>
+    //             <td>{job.estimatedTime}</td>
+    //             <td>
+    //             <button className="action-btn pause-resume-btn" onClick={() => changeResumeJob(job)}>
+    //                 {isPaused(job) ? (
+    //                 <img src={resumeIcon} alt="Resume" className="icon" />
+    //                 ) : (
+    //                 <img src={pauseIcon} alt="Pause" className="icon" />
+    //                 )}
+    //             </button>
+    //             </td>
+    //             {isWaiting  && (
+    //                 <td>
+    //                     <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
+    //                 </td>
+    //             )}
+    //             {!isWaiting && (
+    //                 <td>
+    //                     <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
+    //                 </td>
+    //             )}
+    //             <td>
+    //                 <button className="action-btn delete-btn" onClick={() => openDeleteForm(job)}>Delete</button>
+    //             </td>
+    //         </tr>
+    //     );
+    // };
+
+    const renderJobRow = (job) => {
         return (
             <tr key={job.jobId}>
                 <td>{job.jobId}</td>
@@ -300,31 +493,42 @@ const Jobs = () => {
                 <td>{job.createdTime}</td>
                 <td>{job.activationStatus}</td>
                 <td>{job.estimatedTime}</td>
-                <td>
-                <button className="action-btn pause-resume-btn" onClick={() => changeResumeJob(job)}>
-                    {isPaused(job) ? (
-                    <img src={resumeIcon} alt="Resume" className="icon" />
-                    ) : (
-                    <img src={pauseIcon} alt="Pause" className="icon" />
-                    )}
-                </button>
-                </td>
-                {isWaiting && (
+    
+                {/* Pause/Resume button for Waiting or Ready statuses */}
+                {(job.status === "Waiting" || job.status === "Ready") && (
+                    <td>
+                        <button className="action-btn pause-resume-btn" onClick={() => changeResumeJob(job)}>
+                            {isPaused(job) ? (
+                                <img src={resumeIcon} alt="Resume" className="icon" />
+                            ) : (
+                                <img src={pauseIcon} alt="Pause" className="icon" />
+                            )}
+                        </button>
+                    </td>
+                )}
+    
+                {/* "Edit" button for Waiting or Ready status */}
+                {(job.status === "Waiting" || job.status === "Ready") && (
                     <td>
                         <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
                     </td>
                 )}
-                {!isWaiting && (
+    
+                {/* "Delete" button for Waiting or Ready statuses */}
+                {(job.status === "Waiting" || job.status === "Ready") && (
                     <td>
-                        <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
+                        <button className="action-btn delete-btn" onClick={() => openDeleteForm(job)}>Delete</button>
                     </td>
                 )}
-                <td>
-                    <button className="action-btn delete-btn" onClick={() => openDeleteForm(job)}>Delete</button>
-                </td>
+
+                {/* Duration for Running status */}
+                {job.status === "Running" && (
+                    <td>{job.duration}</td>
+                )}
             </tr>
         );
     };
+
     
     return (
         <div className="jobs-container">
@@ -339,7 +543,7 @@ const Jobs = () => {
                         <tr>
                             <th>Job ID</th>
                             <th>Job Name</th>
-                            <th>Tests to Run</th>
+                            <th>Test to Run</th>
                             <th>Resource Pool</th>
                             <th>Build Version</th>
                             <th>Job Run Type</th>
@@ -356,7 +560,8 @@ const Jobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {waitingJobs.map((job) => renderJobRow(job, true))}
+                        {/* {waitingJobs.map((job) => renderJobRow(job, true))} */}
+                        {waitingJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
 
@@ -366,7 +571,7 @@ const Jobs = () => {
                         <tr>
                             <th>Job ID</th>
                             <th>Job Name</th>
-                            <th>Tests to Run</th>
+                            <th>Test to Run</th>
                             <th>Resource Pool</th>
                             <th>Build Version</th>
                             <th>Job Run Type</th>
@@ -383,11 +588,40 @@ const Jobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {readyJobs.map((job) => renderJobRow(job, false))}
+                        {/* {readyJobs.map((job) => renderJobRow(job, false))} */}
+                        {readyJobs.map((job) => renderJobRow(job))}
+                    </tbody>
+                </table>
+
+                <h2>Running Jobs</h2>
+                <table className="jobs-table running-jobs">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Job Name</th>
+                            <th>Test to Run</th>
+                            <th>Resource Pool</th>
+                            <th>Build Version</th>
+                            <th>Job Run Type</th>
+                            <th>Schedule Type</th>
+                            <th>Schedule Time</th>
+                            <th>Priority Level</th>
+                            <th>Created Date</th>
+                            <th>Created Time</th>
+                            <th>Activation Status</th>
+                            <th>Estimated Time</th>
+                            <th>Duration</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {/* {runningJobs.map((job) => renderJobRow(job, false))} */}
+                        {runningJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
             </div>
 
+            
+            {/* Conditional rendering for Edit and Delete forms */}
             {isEditFormOpen && editingJob && (
                 <EditJobForm job={editingJob} closeForm={closeEditForm} saveJob={handleSaveJob} />
             )}

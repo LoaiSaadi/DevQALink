@@ -29,13 +29,6 @@ mongoose.connect('mongodb://localhost:27017/DevQALink-DB', { useNewUrlParser: tr
     .then(() => console.log('Connected to MongoDB'))
     .catch(err => console.error('Could not connect to MongoDB', err));
 
-// Jobs routes
-const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobsRoute');
-const readyJobsRoutes = require('./routes/jobsRoutes/readyJobsRoute');
-app.use('/jobs/waitingJobs', waitingJobsRoutes);
-app.use('/jobs/readyJobs', readyJobsRoutes);
-
-
 // Qa routes
 const testsRoutes = require('./routes/qaRoutes/testsRoute');
 app.use('/tests', testsRoutes);
@@ -52,9 +45,14 @@ app.use('/management/servers', serversRoutes);
 app.use('/management/clusters', clustersRoutes);
 app.use('/management/pools', poolsRoutes);
 
+// Jobs routes
+const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobsRoute');
+const readyJobsRoutes = require('./routes/jobsRoutes/readyJobsRoute');
+const runningJobsRoutes = require('./routes/jobsRoutes/runningJobsRoute');
+app.use('/jobs/waitingJobs', waitingJobsRoutes);
+app.use('/jobs/readyJobs', readyJobsRoutes);
+app.use('/jobs/runningJobs', runningJobsRoutes);
 
-// const poolsRoutes = require('./routes/pools');
-// app.use('/pools', poolsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

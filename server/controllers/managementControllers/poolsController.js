@@ -1,6 +1,8 @@
 const Pool = require('../../models/managementModels/poolsModel');
 const Cluster = require('../../models/managementModels/clustersModel');  // Assuming you have a Cluster model
 const moment = require('moment-timezone');
+const mongoose = require('mongoose');
+
 
 exports.allPools = async (req, res) => {
     try {
@@ -148,5 +150,88 @@ exports.removeClusterFromPoolById = async (req, res) => {
             message: 'Error removing cluster from pool',
             error: error.message
         });
+    }
+};
+
+
+// exports.findClusterAndUpdate = async (req, res) => {
+//     const {   resourcePool} = req.body;
+
+//     console.log('resourcePool LOL:', resourcePool);
+//     // try {
+//         // Find the pool with the given resourcePool name
+//         const pool = await Pool.findOne({ poolName: resourcePool });
+//         console.log('pool LOL:', pool);
+
+//         if (!pool) {
+//             return res.status(404).json({ message: 'Pool not found' });
+//         }
+
+//         // Fetch all clusters in this pool by their IDs
+//         const clusterIds = pool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
+//         console.log('clusterIds LOL:', clusterIds);
+//         const clusters = await Cluster.find({ _id: { $in: clusterIds } });
+//         console.log('clusters LOL:', clusters);
+
+//         // Find an available cluster within the fetched clusters
+//         const availableCluster = clusters.find(cluster => cluster.clusterStatus === 'Available');
+//         console.log('availableCluster LOL:', availableCluster);
+//         if (!availableCluster) {
+//             // res.status(404).json({ message: 'No available cluster found in the pool', cluster: null });
+//             // res.json(null);
+//             // res.status(404).json({ cluster: null });
+//             // res.josn(availableCluster)
+//             // return res.status(200).json({ ok: false, message: 'No available cluster found in the pool' });
+//             res.josn(null);
+//         }
+
+//         else {
+//             // Update the status of the found cluster to 'Busy'
+//             availableCluster.clusterStatus = 'Running';
+
+//             // Save the updated pool document to the database
+//             await availableCluster.save();
+//             // await pool.save();// Send the updated cluster back in the response
+
+//             return res.json(availableCluster);
+//         }
+
+//     // } catch (error) {
+//     //     console.error('Error finding and updating the cluster:', error);
+//     //     res.status(500).json({ message: 'Server error' });
+//     // }
+// };
+
+exports.findClusterAndUpdate = async (req, res) => {
+    const { resourcePool } = req.body;
+
+    try {
+        // Find the pool with the given resourcePool name
+        const pool = await Pool.findOne({ poolName: resourcePool });
+        if (!pool) {
+            return res.status(404).json({ ok: false, message: 'Pool not found' });
+        }
+
+        // Fetch all clusters in this pool by their IDs
+        const clusterIds = pool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
+        const clusters = await Cluster.find({ _id: { $in: clusterIds } });
+
+        // Find an available cluster within the fetched clusters
+        const availableCluster = clusters.find(cluster => cluster.clusterStatus === 'Available');
+
+        if (!availableCluster) {
+            // If no available cluster is found, return a JSON response with ok: false
+            return res.status(200).json({ success: false, message: 'No available cluster found in the pool' });
+        }
+
+        // Update the status of the found cluster to 'Running'
+        availableCluster.clusterStatus = 'Running';
+        await availableCluster.save();
+
+        // Send the updated cluster back in the response with ok: true
+        return res.status(200).json({ success: true, cluster: availableCluster });
+    } catch (error) {
+        console.error('Error finding and updating the cluster:', error);
+        return res.status(500).json({ ok: false, message: 'Server error' });
     }
 };
