@@ -55,6 +55,8 @@ exports.addRunningJob = async (req, res) => {
         // Save the new RunningJob object
         const savedJob = await newJob.save();
 
+        // runTheJob(savedJob);
+
         res.status(201).json({
             message: 'Job added successfully',
             job: savedJob
@@ -67,6 +69,11 @@ exports.addRunningJob = async (req, res) => {
         });
     }
 };
+
+// const runTheJob = async (job) => {
+//     const { jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, createdDate, createdTime, estimatedTime, activationStatus, resumeJob, duration } = job;
+
+
 
 exports.deleteJobById = async (req, res) => {
     try {

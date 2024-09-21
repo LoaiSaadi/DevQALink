@@ -84,11 +84,11 @@ exports.deleteClusterById = async (req, res) => {
 exports.updateClusterById = async (req, res) => {
     try {
         const clusterId = req.params.clusterId;
-        const { clusterName, clusterDescription } = req.body;
+        const { clusterName, clusterDescription, clusterStatus } = req.body;
 
         const updatedCluster = await Cluster.findOneAndUpdate(
             { clusterId },
-            { clusterName, clusterDescription },
+            { clusterName, clusterDescription, clusterStatus },
             { new: true }
         );
 

@@ -1,11 +1,12 @@
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './Jobs.css';
 import JobForm from './JobForm';
 import EditJobForm from './EditJobForm';
 import DeleteJobForm from './DeleteJobForm';
 import pauseIcon from './pause.png'; // Adjust the relative path as needed
 import resumeIcon from './play-buttton.png';
+
 
 const fetchWaitingJobsData = async () => {
     try {
@@ -59,6 +60,11 @@ const Jobs = () => {
     const [editingJob, setEditingJob] = useState(null);
     const [deletingJob, setDeletingJob] = useState(null);
 
+    // const example = useRef(new Array());
+    const example = useRef([]);  // This holds the jobs ready to be processed
+    const [trigger, setTrigger] = useState(0); // A state to trigger re-renders
+
+
     // Fetch data when the component mounts
     useEffect(() => {
         const fetchData = async () => {
@@ -99,6 +105,9 @@ const Jobs = () => {
             });
             console.log(`Job ${jobId} deleted from WaitingJobs`);
             
+            example.current.push(job);
+            setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+
             handleJobDeleted(); // Update the waiting jobs and ready jobs lists
         }
         
@@ -202,113 +211,32 @@ const Jobs = () => {
         }
     }, []); // **********************************DELETED readyJobs as a dependency**********************************
 
-    // // Listener for when readyJobs has jobs
-    // useEffect(() => {
-    //     if (readyJobs.length > 0) {
-    //         console.log("Hello:)")
-    //         try {
-    //             const job = readyJobs[0];
-    //             console.log(`Job ${job.jobId} is running...`);
 
-    //             // add job to running jobs *************************************************
-    //             moveJobToRunning(job.jobId);
-
-    //             // if (job.jobRunType === 'Immediately') {
-    //             //     console.log(`Job ${job.jobId} is ready to run immediately`);
-    //             //     // Call the API to run the job immediately
-    //             //     fetch(`http://localhost:3000/jobs/readyJobs/runJobById/${job.jobId}`, {
-    //             //         method: 'PUT',
-    //             //         headers: {
-    //             //             'Content-Type': 'application/json'
-    //             //         }
-    //             //     });
-    //             //     console.log(`Job ${job.jobId} is running...`);
-    //             // }
-
-    //         } catch (error) {
-    //             console.error('Error running job:', error);
-    //         }   
-    //     }
-    // }, [readyJobs]); // This useEffect will run when readyJobs changes
-
-
-    // useEffect(() => {
-    //     if (readyJobs.length > 0) {
-    //         console.log("Ready jobs have been updated.");
-    
-    //         // Example: Starting the first job or any other relevant action
-    //         const startJob = async (job) => {
-    //             try {
-    //                 console.log(`Starting job ${job.jobId}...`);
-    //                 // Implement logic to start or process the job here
-    //                 // For example, you might want to update the job status or trigger other actions
-    //                 moveJobToRunning(job.jobId);
-    //                 // await someApiCallToStartJob(job);
-    //             } catch (error) {
-    //                 console.error('Error processing job:', error);
-    //             }
-    //         };
-    
-    //         // Process each job or a specific job from the readyJobs list
-    //         readyJobs.forEach(job => startJob(job));
-    //     }
-    // }, [readyJobs, moveJobToRunning]); // This useEffect runs whenever readyJobs changes
-    
-
-    const [processedJobs, setProcessedJobs] = useState(new Set());
-
-    // useEffect(() => {
-    //     if (readyJobs.length > 0) {
-    //         console.log("Ready jobs have been updated.");
-
-    //         const startJob = async (job) => {
-    //             if (processedJobs.has(job.jobId)) {
-    //                 return; // Skip already processed jobs
-    //             }
-
-    //             try {
-    //                 console.log(`Starting job ${job.jobId}...`);
-    //                 moveJobToRunning(job.jobId);
-    //                 setProcessedJobs(prev => new Set(prev).add(job.jobId));
-    //             } catch (error) {
-    //                 console.error('Error processing job:', error);
-    //             }
-    //         };
-
-    //         readyJobs.forEach(job => startJob(job));
-    //     }
-    // }, [readyJobs, moveJobToRunning, processedJobs]); // Added processedJobs to dependencies
-
+    // Effect to run jobs when example array changes
     useEffect(() => {
-        if (readyJobs.length > 0) {
-            console.log("Ready jobs have been updated.");
-    
-            const jobQueue = [...readyJobs]; // Copy readyJobs into a queue
-    
-            const processJobQueue = async () => {
-                while (jobQueue.length > 0) {
-                    const job = jobQueue.shift(); // Get the first job from the queue
-    
-                    if (processedJobs.has(job.jobId)) {
-                        continue; // Skip already processed jobs
-                    }
-    
-                    try {
-                        console.log(`Starting job ${job.jobId}...`);
-                        await moveJobToRunning(job.jobId); // Wait until job processing finishes
-                        setProcessedJobs(prev => new Set(prev).add(job.jobId));
-                    } catch (error) {
-                        console.error('Error processing job:', error);
-                    }
+        const processJobs = async () => {
+            if (example.current.length === 0) return; // No jobs to process
+
+            for (const job of example.current) {
+                try {
+                    console.log(`Processing job ${job.jobId}...`);
+                    await moveJobToRunning(job.jobId); // Assuming this moves the job to running
+
+                    console.log(`Job ${job.jobId} has been moved to running.`);
+                } catch (error) {
+                    console.error(`Error processing job ${job.jobId}:`, error);
                 }
-            };
-    
-            // Start processing the job queue
-            processJobQueue();
-        }
-    }, [readyJobs, moveJobToRunning, processedJobs]);    
-   
-    
+            }
+
+            // Clear the example array after processing all jobs
+            example.current = [];
+        };
+
+        processJobs();
+    }, [trigger, moveJobToRunning]);  // Re-run the effect whenever trigger changes (new job added)
+
+
+
     const handleJobAdded = async (newJob) => {
         try {
             // If the added job's scheduleType is 'Immediately', move it to ReadyJobs
@@ -528,6 +456,7 @@ const Jobs = () => {
             </tr>
         );
     };
+
 
     
     return (
