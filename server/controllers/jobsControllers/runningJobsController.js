@@ -71,8 +71,63 @@ exports.addRunningJob = async (req, res) => {
 };
 
 // const runTheJob = async (job) => {
-//     const { jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, createdDate, createdTime, estimatedTime, activationStatus, resumeJob, duration } = job;
+//     const { jobId } = job;
 
+//     let duration = 0;
+//     const totalDuration = Math.floor(Math.random() * (60 - 20 + 1)) + 20; // Random between 20 and 60 seconds
+
+//     const updateInterval = setInterval(async () => {
+//         duration++;
+
+//         // Format the duration as HH:MM:SS
+//         const hours = String(Math.floor(duration / 3600)).padStart(2, '0');
+//         const minutes = String(Math.floor((duration % 3600) / 60)).padStart(2, '0');
+//         const seconds = String(duration % 60).padStart(2, '0');
+//         const formattedDuration = `${hours}:${minutes}:${seconds}`;
+
+//         // Emit the timer update to the frontend via WebSocket
+//         io.emit('timerUpdate', { jobId, duration: formattedDuration });
+
+//         // Update the job's duration field in the database
+//         job.duration = formattedDuration;
+//         await job.save();
+
+//         if (duration >= totalDuration) {
+//             clearInterval(updateInterval);
+//             console.log(`Job ${jobId} finished running.`);
+//             // Optionally, you can update the job status to 'Completed' here
+//         }
+//     }, 1000); // Update every second
+// };
+
+exports.updateDurationById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const { duration } = req.body;
+
+        const updatedJob = await RunningJob.findOneAndUpdate(
+            { jobId },
+            { duration },
+            { new: true }
+        );
+
+        if (updatedJob) {
+            res.status(200).json({
+                message: 'Duration updated successfully',
+                job: updatedJob
+            });
+        } else {
+            res.status(404).json({ message: 'Job not found' });
+        }
+    }
+    catch (error) {
+        console.error('Error updating duration:', error);
+        res.status(500).json({
+            message: 'Error updating duration',
+            error: error.message
+        });
+    }
+};
 
 
 exports.deleteJobById = async (req, res) => {

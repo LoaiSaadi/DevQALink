@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var multer = require('multer');
 var upload = multer();
 
+
 app.use((req, res, next) => {  //CORS
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, PATCH'); // Allow specific HTTP methods
@@ -52,6 +53,32 @@ const runningJobsRoutes = require('./routes/jobsRoutes/runningJobsRoute');
 app.use('/jobs/waitingJobs', waitingJobsRoutes);
 app.use('/jobs/readyJobs', readyJobsRoutes);
 app.use('/jobs/runningJobs', runningJobsRoutes);
+
+
+//  // Create HTTP server and Socket.IO instance
+//  const http = require('http');
+//  const { Server } = require('socket.io');
+//  const server = http.createServer(app);
+//  const io = new Server(server, {
+//      cors: {
+//          origin: "http://localhost:3001",
+//          methods: ["GET", "POST"]
+//      }
+//  });
+ 
+// // Socket.IO connection event
+// io.on('connection', (socket) => {
+//     console.log('a user connected');
+
+//     socket.on('disconnect', () => {
+//         console.log('user disconnected');
+//     });
+// });
+
+// // Start the server
+// server.listen(PORT, () => {
+//     console.log(`Server running on port ${PORT}`);
+// });
 
 
 // Start the server

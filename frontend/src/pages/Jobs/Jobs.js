@@ -65,6 +65,8 @@ const Jobs = () => {
     const [trigger, setTrigger] = useState(0); // A state to trigger re-renders
 
 
+
+
     // Fetch data when the component mounts
     useEffect(() => {
         const fetchData = async () => {
@@ -237,6 +239,10 @@ const Jobs = () => {
 
 
 
+   
+
+
+
     const handleJobAdded = async (newJob) => {
         try {
             // If the added job's scheduleType is 'Immediately', move it to ReadyJobs
@@ -348,7 +354,111 @@ const Jobs = () => {
         }
     };
 
+    const [durations, setDurations] = useState({}); // Store durations for running jobs
+    const timersStartedRef = useRef({}); // Track if timers have started for jobs
+ 
 
+     // Function to save job duration to the server
+     const saveDuration = async (jobId, formattedDuration) => {
+        try {
+            const response = await fetch(`http://localhost:3000/jobs/runningJobs/updateDurationById/${jobId}`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ duration: formattedDuration }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to update duration for job ${jobId}: ${response.statusText}`);
+            }
+
+            console.log(`Duration for job ${jobId} updated to ${formattedDuration}.`);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
+    // Function to initialize job duration and timer
+    const startTimer = (jobId) => {
+        if (timersStartedRef.current[jobId]) {
+            return; // Timer already started for this job
+        }
+
+        timersStartedRef.current[jobId] = true; // Mark timer as started
+
+        const min_duration = 10;
+        const max_duration = 20;
+        const randomDuration = Math.floor(Math.random() * (max_duration - min_duration + 1)) + min_duration; // Random duration between 10-20 seconds
+        console.log(`Job ${jobId} will run for ${randomDuration} seconds`);
+
+        setDurations((prev) => ({
+            ...prev,
+            [jobId]: { seconds: 0, duration: randomDuration }, // Initialize seconds and duration
+        }));
+
+        const intervalId = setInterval(() => {
+            setDurations((prev) => {
+                const currentJob = prev[jobId];
+                if (!currentJob) return prev; // Prevent errors if jobId doesn't exist
+
+                const newSeconds = currentJob.seconds + 1;
+
+                // Stop the timer if it reaches the random duration
+                if (newSeconds >= currentJob.duration) {
+                    clearInterval(intervalId); // Clear the interval
+                    console.log(`Job ${jobId} has run for ${newSeconds} seconds`); // Log the final duration
+
+                    // Format duration and save to the server
+                    const formattedDuration = formatTime(newSeconds);
+                    saveDuration(jobId, formattedDuration);
+
+                    timersStartedRef.current[jobId] = false; // Reset the flag
+                    return { ...prev, [jobId]: { seconds: newSeconds } }; // Update without intervalId
+                }
+
+                return { ...prev, [jobId]: { seconds: newSeconds, duration: currentJob.duration } };
+            });
+        }, 1000);
+
+        // Save the interval ID to allow clearing later
+        setDurations((prev) => ({
+            ...prev,
+            [jobId]: { ...prev[jobId], intervalId }, // Store the interval ID
+        }));
+    };
+
+    // Effect to start timers for running jobs
+    useEffect(() => {
+        runningJobs.forEach((job) => {
+            if (job.status === "Running" && !timersStartedRef.current[job.jobId]) {
+                console.log(`Starting timer for job ${job.jobId}`);
+                startTimer(job.jobId); // Start the timer if it’s a new running job
+            }
+        });
+
+        // Cleanup function to clear intervals when component unmounts or jobs change
+        return () => {
+            Object.keys(durations).forEach((jobId) => {
+                if (durations[jobId]?.intervalId) {
+                    clearInterval(durations[jobId].intervalId);
+                    timersStartedRef.current[jobId] = false; // Reset the flag when clearing the interval
+                }
+            });
+        };
+    }, [runningJobs]); // Runs every time runningJobs changes
+
+    
+    const formatTime = (seconds) => {
+        const hours = String(Math.floor(seconds / 3600)).padStart(2, '0');
+        const minutes = String(Math.floor((seconds % 3600) / 60)).padStart(2, '0');
+        const secs = String(seconds % 60).padStart(2, '0');
+        return `${hours}:${minutes}:${secs}`;
+    };
+
+
+
+    
     // const formatTestsToRun = (tests) => {
     //     // Check if tests is an array and is not empty
     //     if (!tests || !Array.isArray(tests) || tests.length === 0) return '-';
@@ -451,7 +561,10 @@ const Jobs = () => {
 
                 {/* Duration for Running status */}
                 {job.status === "Running" && (
-                    <td>{job.duration}</td>
+                    // <td>{job.duration}</td>
+                    <td>{durations[job.jobId] ? formatTime(durations[job.jobId].seconds) : "00:00:00"}</td>
+                    
+
                 )}
             </tr>
         );
