@@ -147,21 +147,6 @@ exports.updateRunningJobById = async (req, res) => {
             resumeJob
         } = req.body;
 
-        console.log("req body is: ", req.body); // Log entire request body
-        console.log("jobId: ", jobId);
-        console.log("jobName: ", jobName);
-        console.log("testToRun: ", testToRun);
-        console.log("resourcePool: ", resourcePool);
-        console.log("buildVersion: ", buildVersion);
-        console.log("jobRunType: ", jobRunType);
-        console.log("scheduleType: ", scheduleType);
-        console.log("scheduleTime: ", scheduleTime);
-        console.log("priorityLevel: ", priorityLevel);
-        console.log("createdDate: ", createdDate);
-        console.log("createdTime: ", createdTime);
-        console.log("estimatedTime: ", estimatedTime);
-        console.log("activationStatus: ", activationStatus);
-
         const updatedJob = await RunningJob.findOneAndUpdate(
             { jobId },
             {
@@ -197,4 +182,15 @@ exports.updateRunningJobById = async (req, res) => {
             error: error.message
         });
     }
-}
+};
+
+exports.getJobById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
+        const runningJob = await RunningJob.findOne({ jobId });
+        res.status(200).json(runningJob);
+    }
+    catch (error) {
+        res.status(400).json({ message: error.message });
+    }
+};

@@ -14,7 +14,7 @@ const completedJobSchema = new mongoose.Schema({
     estimatedTime: { type: String, required: true },
     createdDate: { type: String, required: true },
     createdTime: { type: String, required: true },
-    status: { type: String, default: 'Running' },
+    status: { type: String, default: 'Completed' },
     activationStatus: { type: String, default: 'Activated' },
     resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true },
     duration: { type: String, required: true },

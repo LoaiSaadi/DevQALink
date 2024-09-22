@@ -131,3 +131,11 @@ h1 {
     margin-right: 5px; /* Add space between icon and text */
     vertical-align: middle; /* Align icon with the text */
 }
+
+.test-status-succeeded {
+    color: green;
+}
+
+.test-status-failed {
+    color: red;
+}

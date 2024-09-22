@@ -235,3 +235,44 @@ exports.findClusterAndUpdate = async (req, res) => {
         return res.status(500).json({ ok: false, message: 'Server error' });
     }
 };
+
+exports.freeCluster = async (req, res) => {
+    const { job } = req.body;
+
+    console.log('Received job:', job);
+    
+    try {
+        // Find the resource pool by name
+        const resourcePool = await Pool.findOne({ poolName: job.resourcePool });
+        console.log('Resource Pool found:', resourcePool);
+        
+        if (!resourcePool) {
+            console.log('Resource pool not found for:', job.resourcePool);
+            return res.status(404).json({ ok: false, message: 'Resource pool not found' });
+        }
+
+        // Fetch all clusters in this pool by their IDs
+        const clusterIds = resourcePool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
+        const clusters = await Cluster.find({ _id: { $in: clusterIds } });
+
+        // Find the running cluster within the resource pool's clusters array
+        const runningCluster = clusters.find(cluster => cluster.clusterStatus === 'Running');
+        console.log('Running Cluster found:', runningCluster);
+        
+        if (!runningCluster) {
+            console.log('No running cluster found in the specified resource pool:', job.resourcePool);
+            return res.status(404).json({ ok: false, message: 'No running cluster found in the specified resource pool' });
+        }
+
+        // Update the status of the found running cluster to 'Available'
+        runningCluster.clusterStatus = 'Available';
+        await runningCluster.save(); // Save the updated resource pool
+        console.log('Cluster status updated to Available:', runningCluster);
+
+        // Send the updated cluster back in the response with ok: true
+        return res.status(200).json({ success: true, cluster: runningCluster });
+    } catch (error) {
+        console.error('Error freeing the cluster:', error);
+        return res.status(500).json({ ok: false, message: 'Server error' });
+    }
+};

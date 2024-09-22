@@ -6,6 +6,7 @@ import EditJobForm from './EditJobForm';
 import DeleteJobForm from './DeleteJobForm';
 import pauseIcon from './pause.png'; // Adjust the relative path as needed
 import resumeIcon from './play-buttton.png';
+import { Preview } from '@mui/icons-material';
 
 
 const fetchWaitingJobsData = async () => {
@@ -50,18 +51,33 @@ const fetchRunningJobsData = async () => {
     }
 };
 
+const fetchCompletedJobsData = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/jobs/completedJobs/allCompletedJobs');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching completed jobs data:', error);
+        throw error;
+    }
+};
+
 const Jobs = () => {
     const [waitingJobs, setWaitingJobs] = useState([]);
     const [readyJobs, setReadyJobs] = useState([]);
     const [runningJobs, setRunningJobs] = useState([]);
+    const [completedJobs, setCompletedJobs] = useState([]);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [isEditFormOpen, setIsEditFormOpen] = useState(false);
     const [isDeleteFormOpen, setIsDeleteFormOpen] = useState(false);
     const [editingJob, setEditingJob] = useState(null);
     const [deletingJob, setDeletingJob] = useState(null);
 
-    // const example = useRef(new Array());
-    const example = useRef([]);  // This holds the jobs ready to be processed
+    // const readyJobsQueue = useRef(new Array());
+    const readyJobsQueue = useRef([]);  // This holds the jobs ready to be processed
     const [trigger, setTrigger] = useState(0); // A state to trigger re-renders
 
 
@@ -74,9 +90,11 @@ const Jobs = () => {
                 const waitingJobsData = await fetchWaitingJobsData();
                 const readyJobsData = await fetchReadyJobsData();
                 const runningJobsData = await fetchRunningJobsData();
+                const completedJobsData = await fetchCompletedJobsData();
                 setWaitingJobs(waitingJobsData);
                 setReadyJobs(readyJobsData);
                 setRunningJobs(runningJobsData);
+                setCompletedJobs(completedJobsData);
             } catch (error) {
                 console.error('Error fetching job data:', error);
             }
@@ -93,24 +111,24 @@ const Jobs = () => {
             console.log("Moving this job from waiting to ready: ", job);
 
             if (job.resumeJob === "Resume") {
-            // API to insert the job into ReadyJobs
-            await fetch(`http://localhost:3000/jobs/readyJobs/addJob`, { 
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(job), // assuming jobId is enough to insert it
-            });
-            console.log(`Job ${jobId} moved from WaitingJobs to ReadyJobs`);
-            
-            // API to delete the job from WaitingJobs
-            await fetch(`http://localhost:3000/jobs/waitingJobs/deleteJobById/${jobId}`, { 
-                method: 'DELETE',
-            });
-            console.log(`Job ${jobId} deleted from WaitingJobs`);
-            
-            example.current.push(job);
-            setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+                // API to insert the job into ReadyJobs
+                await fetch(`http://localhost:3000/jobs/readyJobs/addJob`, { 
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(job), // assuming jobId is enough to insert it
+                });
+                console.log(`Job ${jobId} moved from WaitingJobs to ReadyJobs`);
+                
+                // API to delete the job from WaitingJobs
+                await fetch(`http://localhost:3000/jobs/waitingJobs/deleteJobById/${jobId}`, { 
+                    method: 'DELETE',
+                });
+                console.log(`Job ${jobId} deleted from WaitingJobs`);
+                
+                readyJobsQueue.current.push(job);
+                setTrigger(prev => prev + 1); // Trigger re-render to process the new job
 
-            handleJobDeleted(); // Update the waiting jobs and ready jobs lists
+                handleJobDeleted(); // Update the waiting jobs and ready jobs lists
         }
         
         } catch (error) {
@@ -200,6 +218,9 @@ const Jobs = () => {
                     });
                     console.log(`Job ${jobId} deleted from ReadyJobs`);
                     
+                     // Remove the job from readyJobsQueue
+                    readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId);
+
                     handleJobDeleted(); // Update the ready jobs and running jobs lists
                 }
                 else {
@@ -214,12 +235,12 @@ const Jobs = () => {
     }, []); 
 
 
-    // Effect to run jobs when example array changes
+    // Effect to run jobs when readyJobsQueue array changes
     useEffect(() => {
         const processJobs = async () => {
-            if (example.current.length === 0) return; // No jobs to process
+            if (readyJobsQueue.current.length === 0) return; // No jobs to process
 
-            for (const job of example.current) {
+            for (const job of readyJobsQueue.current) {
                 try {
                     console.log(`Processing job ${job.jobId}...`);
                     await moveJobToRunning(job.jobId); // Assuming this moves the job to running
@@ -230,16 +251,49 @@ const Jobs = () => {
                 }
             }
 
-            // Clear the example array after processing all jobs
-            example.current = [];
+            // Clear the readyJobsQueue array after processing all jobs
+            //readyJobsQueue.current = [];
         };
 
+        console.log('Processing jobs from readyJobsQueue...');
+        console.log('readyJobsQueue:', readyJobsQueue.current);
         processJobs();
     }, [trigger, moveJobToRunning]);  // Re-run the effect whenever trigger changes (new job added)
 
 
 
-   
+    // Memoize moveJobToRunning using useCallback
+    const moveJobToCompleted = useCallback(async (jobId) => {
+        try {
+            // Fetch the job from RunningJobs instead of ReadyJobs
+            const jobData = await fetch(`http://localhost:3000/jobs/runningJobs/getJobById/${jobId}`); 
+            const job = await jobData.json();
+            console.log("Moving this job from running to completed: ", job);
+
+
+            // API to insert the job into CompletedJobs
+            await fetch(`http://localhost:3000/jobs/completedJobs/addJob`, { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(job), // assuming jobId is enough to insert it
+            });
+            console.log(`Job ${jobId} moved from RunningJobs to CompletedJobs`);
+
+            // API to delete the job from RunningJobs
+            await fetch(`http://localhost:3000/jobs/runningJobs/deleteJobById/${jobId}`, { 
+                method: 'DELETE',
+            });
+            console.log(`Job ${jobId} deleted from RunningJobs`);
+
+            // readyJobsQueue.current.push(job);
+            // setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+
+            handleJobDeleted(); // Update the jobs lists
+            
+        } catch (error) {
+            console.error(`Error moving job ${jobId} to CompletedJobs:`, error);
+        }
+    }, []); 
 
 
 
@@ -265,9 +319,11 @@ const Jobs = () => {
             const updatedWaitingJobs = await fetchWaitingJobsData();
             const updatedReadyJobs = await fetchReadyJobsData();
             const updatedRunningJobs = await fetchRunningJobsData();
+            const updatedCompletedJobs = await fetchCompletedJobsData();
             setWaitingJobs(updatedWaitingJobs);
             setReadyJobs(updatedReadyJobs);
             setRunningJobs(updatedRunningJobs);
+            setCompletedJobs(updatedCompletedJobs);
         } catch (error) {
             console.error('Error fetching updated jobs (after deleting):', error);
         }
@@ -354,12 +410,14 @@ const Jobs = () => {
         }
     };
 
+
+
     const [durations, setDurations] = useState({}); // Store durations for running jobs
     const timersStartedRef = useRef({}); // Track if timers have started for jobs
- 
 
-     // Function to save job duration to the server
-     const saveDuration = async (jobId, formattedDuration) => {
+
+    // Function to save job duration to the server
+    const saveDuration = async (jobId, formattedDuration) => {
         try {
             const response = await fetch(`http://localhost:3000/jobs/runningJobs/updateDurationById/${jobId}`, {
                 method: 'PUT',
@@ -379,9 +437,30 @@ const Jobs = () => {
         }
     };
 
+    const freeTheCluster = async (job) => {
+        try {
+            const response = await fetch(`http://localhost:3000/management/pools/freeCluster`, {
+                method: 'PUT',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ job }),
+            });
+
+            if (!response.ok) {
+                throw new Error(`Failed to free the cluster for job ${job.jobId}: ${response.statusText}`);
+            }
+
+            console.log(`Cluster freed for job ${job.jobId}.`);
+        } catch (error) {
+            console.error(error);
+        }
+    };
+
     // Function to initialize job duration and timer
-    const startTimer = (jobId) => {
+    const startTimer = async (jobId) => {
         if (timersStartedRef.current[jobId]) {
+            console.log(`Timer already started for job ${jobId}`);
             return; // Timer already started for this job
         }
 
@@ -389,7 +468,7 @@ const Jobs = () => {
 
         const min_duration = 20;
         const max_duration = 50;
-        const randomDuration = Math.floor(Math.random() * (max_duration - min_duration + 1)) + min_duration; // Random duration between 10-20 seconds
+        const randomDuration = Math.floor(Math.random() * (max_duration - min_duration + 1)) + min_duration; // Random duration between 20-50 seconds
         console.log(`Job ${jobId} will run for ${randomDuration} seconds`);
 
         setDurations((prev) => ({
@@ -397,53 +476,69 @@ const Jobs = () => {
             [jobId]: { seconds: 0, duration: randomDuration }, // Initialize seconds and duration
         }));
 
-        const intervalId = setInterval(() => {
-            setDurations((prev) => {
-                const currentJob = prev[jobId];
-                if (!currentJob) return prev; // Prevent errors if jobId doesn't exist
+        // Define intervalId before the interval is created
+        let intervalId;
 
-                const newSeconds = currentJob.seconds + 1;
+        const finalDuration = await new Promise((resolve) => {
+            intervalId = setInterval(() => {
+                console.log(`Job ${jobId} is running..`);
+                setDurations((prev) => {
+                    const currentJob = prev[jobId];
+                    if (!currentJob) return prev; // Prevent errors if jobId doesn't exist
 
-                // Stop the timer if it reaches the random duration
-                if (newSeconds >= currentJob.duration) {
-                    clearInterval(intervalId); // Clear the interval
-                    console.log(`Job ${jobId} has run for ${newSeconds} seconds`); // Log the final duration
+                    const newSeconds = currentJob.seconds + 1;
 
-                    // Format duration and save to the server
-                    const formattedDuration = formatTime(newSeconds);
-                    saveDuration(jobId, formattedDuration);
+                    // Stop the timer if it reaches the random duration
+                    if (newSeconds >= currentJob.duration) {
+                        clearInterval(intervalId); // Clear the interval
+                        console.log(`Job ${jobId} has run for ${newSeconds} seconds`); // Log the final duration
 
-                    timersStartedRef.current[jobId] = false; // Reset the flag
-                    return { ...prev, [jobId]: { seconds: newSeconds } }; // Update without intervalId
-                }
+                        timersStartedRef.current[jobId] = false; // Reset the flag
+                        resolve(newSeconds); // Resolve with the final duration
+                    }
 
-                return { ...prev, [jobId]: { seconds: newSeconds, duration: currentJob.duration } };
-            });
-        }, 1000);
+                    return { ...prev, [jobId]: { seconds: newSeconds, duration: currentJob.duration } };
+                });
+            }, 1000);
+        });
 
         // Save the interval ID to allow clearing later
         setDurations((prev) => ({
             ...prev,
             [jobId]: { ...prev[jobId], intervalId }, // Store the interval ID
         }));
+
+        return finalDuration; // Return the final duration
     };
+
 
     // Effect to start timers for running jobs
     useEffect(() => {
-        runningJobs.forEach((job) => {
-            if (job.status === "Running" && !timersStartedRef.current[job.jobId]) {
-                console.log(`Starting timer for job ${job.jobId}`);
-                startTimer(job.jobId); // Start the timer if it’s a new running job
-                // ********************************************************************
-                // MOVE THE JOB TO COMPLETED
-                // ********************************************************************
+        const startTimers = async () => {
+            for (const job of runningJobs) {
+                if (job.status === "Running" && !timersStartedRef.current[job.jobId]) {
+                    console.log(`Starting timer for job ${job.jobId}`);
+                    const finalDuration = await startTimer(job.jobId); // Start the timer and get the final duration
+                    // Format duration and save to the server
+                    const formattedDuration = formatTime(finalDuration);
+                    await saveDuration(job.jobId, formattedDuration);
+                    console.log(`Final duration for job ${job.jobId}: ${finalDuration} seconds`);
+                    // You can move the job to completed here if needed
+                    await freeTheCluster(job);
+                    moveJobToCompleted(job.jobId);
+                    setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+                    console.log(`LOL`);
+                }
             }
-        });
+        };
+
+        startTimers();
 
         // Cleanup function to clear intervals when component unmounts or jobs change
         return () => {
             Object.keys(durations).forEach((jobId) => {
                 if (durations[jobId]?.intervalId) {
+                    console.log(`Cleaning up interval for job ${jobId}`);
                     clearInterval(durations[jobId].intervalId);
                     timersStartedRef.current[jobId] = false; // Reset the flag when clearing the interval
                 }
@@ -465,7 +560,6 @@ const Jobs = () => {
             <tr key={job.jobId}>
                 <td>{job.jobId}</td>
                 <td>{job.jobName}</td>
-                {/* <td dangerouslySetInnerHTML={{ __html: formatTestsToRun(job.testsToRun) }}></td> */}
                 <td>{job.testToRun}</td>
                 <td>{job.resourcePool}</td>
                 <td>{job.buildVersion}</td>
@@ -509,8 +603,24 @@ const Jobs = () => {
                 {job.status === "Running" && (
                     // <td>{job.duration}</td>
                     <td>{durations[job.jobId] ? formatTime(durations[job.jobId].seconds) : "00:00:00"}</td>
-                    
+                )}
 
+                {job.status === "Completed" && (
+                    <td>{job.duration}</td>
+                )}
+
+                {job.status === "Completed" && (
+                    <td>{job.completedDate}</td>
+                )}
+
+                {job.status === "Completed" && (
+                    <td>{job.completedTime}</td>
+                )}
+
+                {job.status === "Completed" && (
+                    <td className={job.testStatus === "Succeeded" ? "test-status-succeeded" : job.testStatus === "Failed" ? "test-status-failed" : ""}>
+                        {job.testStatus}
+                    </td>
                 )}
             </tr>
         );
@@ -601,6 +711,34 @@ const Jobs = () => {
                     </thead>
                     <tbody>
                         {runningJobs.map((job) => renderJobRow(job))}
+                    </tbody>
+                </table>
+
+                <h2>Completed Jobs</h2>
+                <table className="jobs-table running-jobs">
+                    <thead>
+                        <tr>
+                            <th>Job ID</th>
+                            <th>Job Name</th>
+                            <th>Test to Run</th>
+                            <th>Resource Pool</th>
+                            <th>Build Version</th>
+                            <th>Job Run Type</th>
+                            <th>Schedule Type</th>
+                            <th>Schedule Time</th>
+                            <th>Priority Level</th>
+                            <th>Created Date</th>
+                            <th>Created Time</th>
+                            <th>Activation Status</th>
+                            <th>Estimated Time</th>
+                            <th>Duration</th>
+                            <th>Completed Date</th>
+                            <th>Completed Time</th>
+                            <th>Test Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {completedJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
             </div>
