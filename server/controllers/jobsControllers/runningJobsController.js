@@ -49,7 +49,7 @@ exports.addRunningJob = async (req, res) => {
             estimatedTime,
             activationStatus,
             resumeJob,
-            duration: '00:00:00'
+            duration: '00:00:00',
         });
 
         // Save the new RunningJob object
@@ -70,44 +70,16 @@ exports.addRunningJob = async (req, res) => {
     }
 };
 
-// const runTheJob = async (job) => {
-//     const { jobId } = job;
 
-//     let duration = 0;
-//     const totalDuration = Math.floor(Math.random() * (60 - 20 + 1)) + 20; // Random between 20 and 60 seconds
-
-//     const updateInterval = setInterval(async () => {
-//         duration++;
-
-//         // Format the duration as HH:MM:SS
-//         const hours = String(Math.floor(duration / 3600)).padStart(2, '0');
-//         const minutes = String(Math.floor((duration % 3600) / 60)).padStart(2, '0');
-//         const seconds = String(duration % 60).padStart(2, '0');
-//         const formattedDuration = `${hours}:${minutes}:${seconds}`;
-
-//         // Emit the timer update to the frontend via WebSocket
-//         io.emit('timerUpdate', { jobId, duration: formattedDuration });
-
-//         // Update the job's duration field in the database
-//         job.duration = formattedDuration;
-//         await job.save();
-
-//         if (duration >= totalDuration) {
-//             clearInterval(updateInterval);
-//             console.log(`Job ${jobId} finished running.`);
-//             // Optionally, you can update the job status to 'Completed' here
-//         }
-//     }, 1000); // Update every second
-// };
-
-exports.updateDurationById = async (req, res) => {
+exports.updateDurationAndTestStatusById = async (req, res) => {
     try {
         const jobId = req.params.jobId;
         const { duration } = req.body;
 
+
         const updatedJob = await RunningJob.findOneAndUpdate(
             { jobId },
-            { duration },
+            { duration},
             { new: true }
         );
 

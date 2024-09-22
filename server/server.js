@@ -50,36 +50,11 @@ app.use('/management/pools', poolsRoutes);
 const waitingJobsRoutes = require('./routes/jobsRoutes/waitingJobsRoute');
 const readyJobsRoutes = require('./routes/jobsRoutes/readyJobsRoute');
 const runningJobsRoutes = require('./routes/jobsRoutes/runningJobsRoute');
+const completedJobsRoutes = require('./routes/jobsRoutes/completedJobsRoute');
 app.use('/jobs/waitingJobs', waitingJobsRoutes);
 app.use('/jobs/readyJobs', readyJobsRoutes);
 app.use('/jobs/runningJobs', runningJobsRoutes);
-
-
-//  // Create HTTP server and Socket.IO instance
-//  const http = require('http');
-//  const { Server } = require('socket.io');
-//  const server = http.createServer(app);
-//  const io = new Server(server, {
-//      cors: {
-//          origin: "http://localhost:3001",
-//          methods: ["GET", "POST"]
-//      }
-//  });
- 
-// // Socket.IO connection event
-// io.on('connection', (socket) => {
-//     console.log('a user connected');
-
-//     socket.on('disconnect', () => {
-//         console.log('user disconnected');
-//     });
-// });
-
-// // Start the server
-// server.listen(PORT, () => {
-//     console.log(`Server running on port ${PORT}`);
-// });
-
+app.use('/jobs/completedJobs', completedJobsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

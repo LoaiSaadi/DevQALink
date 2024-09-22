@@ -78,8 +78,6 @@ exports.updateJobById = async (req, res) => {
             scheduleType,
             scheduleTime,
             priorityLevel,
-            // estimatedHours,
-            // estimatedMinutes
             createdDate,
             createdTime,
             estimatedTime,

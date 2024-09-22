@@ -5,14 +5,13 @@ const moment = require('moment-timezone');
 // Handle POST request to add a new waiting job
 exports.addWaitingJob = async (req, res) => {
     try {
-        const { jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedHours, estimatedMinutes, resumeJob } = req.body;
+        const { jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedTime } = req.body;
 
         // Check if testToRun is provided and not empty
         if (!testToRun || testToRun.length === 0) {
             return res.status(400).json({ message: 'testToRun is required and cannot be empty' });
         }
         
-        const estimatedTime = `${estimatedHours}h ${estimatedMinutes}m`;
 
         // Validate scheduleType
         const validScheduleTypes = ['One-Time Job', 'Reoccurring Job'];
@@ -100,23 +99,6 @@ exports.updateJobById = async (req, res) => {
             resumeJob
         } = req.body;
 
-        console.log("req body is: ", req.body); // Log entire request body
-        console.log("jobId: ", jobId);
-        console.log("jobName: ", jobName);
-        console.log("testToRun: ", testToRun);
-        console.log("resourcePool: ", resourcePool);
-        console.log("buildVersion: ", buildVersion);
-        console.log("jobRunType: ", jobRunType);
-        console.log("scheduleType: ", scheduleType);
-        console.log("scheduleTime: ", scheduleTime);
-        console.log("priorityLevel: ", priorityLevel);
-        console.log("createdDate: ", createdDate);
-        console.log("createdTime: ", createdTime);
-        console.log("estimatedTime: ", estimatedTime);
-        console.log("activationStatus: ", activationStatus);
-        console.log("resumeJob: ", resumeJob);
-
-
         // Create an object for fields that should be updated
         const updateFields = {};
 
@@ -136,11 +118,6 @@ exports.updateJobById = async (req, res) => {
         if (estimatedTime !== undefined) updateFields.estimatedTime = estimatedTime;
         if (activationStatus !== undefined) updateFields.activationStatus = activationStatus
         if (resumeJob !== undefined) updateFields.resumeJob = resumeJob;
-
-        // Update the created date and time for tracking purposes
-        // const nowInJerusalem = moment().tz('Asia/Jerusalem');
-        // updateFields.createdDate = nowInJerusalem.format('YYYY-MM-DD');
-        // updateFields.createdTime = nowInJerusalem.format('HH:mm:ss');
 
         // Use findOneAndUpdate to search by the jobId field and update the document
         const updatedJobDoc = await WaitingJob.findOneAndUpdate({ jobId }, updateFields, { new: true });

@@ -40,7 +40,6 @@
     display: flex;
     flex-direction: column;
 }
-
 .form-row {
     display: flex;
     flex-direction: column;
@@ -52,15 +51,27 @@
     font-weight: bold;
 }
 
-.form-row input[type="text"],
-.form-row input[type="number"],
-.form-row select {
+/* Make each select span the whole row */
+.time-select {
+    display: flex;
+    flex-direction: column;
+    gap: 10px; /* Add some gap between the selects */
+}
+
+.time-select select {
     padding: 12px;
     border: 1px solid #ccc;
     border-radius: 6px;
     font-size: 16px;
-    width: 100%; /* Ensure width matches other fields */
-    box-sizing: border-box; /* Ensure padding and border are included in the width */
+    width: 100%; /* Each select spans the entire width */
+    box-sizing: border-box; /* Include padding and border in the width */
+}
+
+/* Styling for the span labels like "Hours", "Minutes", "Seconds" */
+.time-select span {
+    margin-top: 5px;
+    font-size: 14px;
+    color: #666;
 }
 
 .form-row input:disabled,

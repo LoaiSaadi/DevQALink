@@ -82,6 +82,12 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
         return `${hours.toString().padStart(2, '0')}:${minutes.padStart(2, '0')}`;
     };
 
+    const time_parts = job.estimatedTime.split(":");
+
+    const Hours = time_parts[0];
+    const Min = time_parts[1];
+    const Sec = time_parts[2];
+
     const [formData, setFormData] = useState({
         jobName: job.jobName || '',
         testToRun: job.testToRun || '',
@@ -91,10 +97,9 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
         scheduleType: job.scheduleType || '',
         scheduleTime: formatTime(job.scheduleTime),
         priorityLevel: job.priorityLevel || '1',
-        estimatedHours: job.estimatedTime ? parseInt(job.estimatedTime.split('h')[0].trim()) : '0',
-        estimatedMinutes: job.estimatedTime ? parseInt(job.estimatedTime.split('h')[1].split('m')[0].trim()) : '0',
-        // estimatedHours: job.estimatedHours,
-        // estimatedMinutes: job.estimatedMinutes,
+        estimatedHours: Hours,
+        estimatedMinutes: Min,
+        estimatedSeconds: Sec,
         activationStatus: job.activationStatus || 'Activated'
     });
 
@@ -123,20 +128,24 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
     // Function to update the job using the API
     const updateJob = async (updatedJobData) => {
 
+         // Pad hours and minutes with leading zeros to ensure they are always two digits
+         const paddedHours = updatedJobData.estimatedHours.padStart(2, '0');
+         const paddedMinutes = updatedJobData.estimatedMinutes.padStart(2, '0');
+         const paddedSeconds = updatedJobData.estimatedSeconds.padStart(2, '0');
+ 
         // Validation: Ensure estimated hours and minutes are not both zero
-        if (updatedJobData.estimatedHours === '0' && updatedJobData.estimatedMinutes === 0) {
+        if (paddedHours === '00' && paddedMinutes === '00' && paddedSeconds === '00') {
             alert('Please select a valid estimated time. Estimated hours and minutes cannot both be zero.');
             return; // Exit 
         }
         else {
             console.log('Estimated hours and minutes are valid');
         }
+       
+        // Format the estimated time as HH:mm
+        const newEstimatedTime = `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
+        console.log('New Estimated Time:', newEstimatedTime);
         
-        const estimatedTime = `${updatedJobData.estimatedHours}h ${updatedJobData.estimatedMinutes}m`;
-        console.log('Hours:', updatedJobData.estimatedHours);
-        console.log('Minutes:', updatedJobData.estimatedMinutes);
-        console.log('Type of hours:', typeof updatedJobData.estimatedHours);
-        console.log('Type of minutes:', typeof updatedJobData.estimatedMinutes);
 
         const validScheduleTypes = ['One-Time Job', 'Reoccurring Job'];
         const validScheduleType = validScheduleTypes.includes(formData.scheduleType) ? formData.scheduleType : '-';
@@ -149,11 +158,10 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
             resourcePool: updatedJobData.resourcePool,
             buildVersion: updatedJobData.buildVersion,
             jobRunType: updatedJobData.jobRunType,
-            // scheduleType: updatedJobData.scheduleType,
             scheduleType: formData.jobRunType === 'Immediately' ? '-' : validScheduleType, // Updated line
             scheduleTime: formData.jobRunType === 'Immediately' ? newScheduleTime : updatedJobData.scheduleTime,
             priorityLevel: updatedJobData.priorityLevel,
-            estimatedTime: estimatedTime,
+            estimatedTime: newEstimatedTime,
             activationStatus: updatedJobData.activationStatus,
         };
 
@@ -409,6 +417,16 @@ const EditJobForm = ({ job, closeForm, saveJob }) => {
                                 {generateOptions(0, 59)}
                             </select>
                             <span>Minutes</span>
+                            <select
+                                name="estimatedSeconds"
+                                value={formData.estimatedSeconds}
+                                onChange={handleChange}
+                                disabled={isReady}
+                                required
+                            >
+                                {generateOptions(0, 59)}
+                            </select>
+                            <span>Seconds</span>
                         </div>
                     </div>
 

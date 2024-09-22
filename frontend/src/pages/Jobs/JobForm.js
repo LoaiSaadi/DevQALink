@@ -11,8 +11,10 @@ const JobForm = ({ closeForm, onJobAdded }) => {
         scheduleType: 'One-Time Job',
         scheduleTime: '',
         priorityLevel: '1',
-        estimatedHours: '0',
-        estimatedMinutes: '0'
+        estimatedHours: '00',
+        estimatedMinutes: '00',
+        estimatedSeconds: '00',
+
     });
 
     const [isScheduleTypeDisabled, setIsScheduleTypeDisabled] = useState(true);
@@ -104,12 +106,23 @@ const JobForm = ({ closeForm, onJobAdded }) => {
         e.preventDefault();
 
         // Validation: Ensure estimated hours and minutes are not both zero
-        if (formData.estimatedHours === '0' && formData.estimatedMinutes === '0') {
+        if (formData.estimatedHours === '00' && formData.estimatedMinutes === '00' && formData.estimatedSeconds === '00') {
             alert('Please select a valid estimated time. Estimated hours and minutes cannot both be zero.');
             return; // Exit the function without submitting the form
         }
 
-        const estimatedTime = `${formData.estimatedHours}h ${formData.estimatedMinutes}m`;
+        // const estimatedTime = `${formData.estimatedHours}h ${formData.estimatedMinutes}m`;
+
+        // Pad hours and minutes with leading zeros to ensure they are always two digits
+        console.log('formData.estimatedHours:', formData.estimatedHours);
+        console.log('formData.estimatedMinutes:', formData.estimatedMinutes);
+        console.log('formData.estimatedSeconds:', formData.estimatedSeconds);
+        const paddedHours = formData.estimatedHours.padStart(2, '0') || formData.estimatedHours;
+        const paddedMinutes = formData.estimatedMinutes.padStart(2, '0') || formData.estimatedMinutes;
+        const paddedSeconds = formData.estimatedSeconds.padStart(2, '0') || formData.estimatedSeconds;
+
+        // Format the estimated time as HH:mm
+        const estimatedTime = `${paddedHours}:${paddedMinutes}:${paddedSeconds}`;
     
         const validScheduleTypes = ['One-Time Job', 'Reoccurring Job'];
         const validScheduleType = validScheduleTypes.includes(formData.scheduleType) ? formData.scheduleType : '-';
@@ -299,6 +312,16 @@ const JobForm = ({ closeForm, onJobAdded }) => {
                                 {generateOptions(0, 59)}
                             </select>
                             <span>Minutes</span>
+                            <select
+                                name="estimatedSeconds"
+                                value={formData.estimatedSeconds}
+                                onChange={handleChange}
+                                required
+                            >
+                                {generateOptions(0, 59)}
+                            </select>
+                            <span>Seconds</span>
+
                         </div>
                     </div>
 

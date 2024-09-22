@@ -211,7 +211,7 @@ const Jobs = () => {
         } catch (error) {
             console.error(`Error moving job ${jobId} to RunningJobs:`, error);
         }
-    }, []); // **********************************DELETED readyJobs as a dependency**********************************
+    }, []); 
 
 
     // Effect to run jobs when example array changes
@@ -387,8 +387,8 @@ const Jobs = () => {
 
         timersStartedRef.current[jobId] = true; // Mark timer as started
 
-        const min_duration = 10;
-        const max_duration = 20;
+        const min_duration = 20;
+        const max_duration = 50;
         const randomDuration = Math.floor(Math.random() * (max_duration - min_duration + 1)) + min_duration; // Random duration between 10-20 seconds
         console.log(`Job ${jobId} will run for ${randomDuration} seconds`);
 
@@ -434,6 +434,9 @@ const Jobs = () => {
             if (job.status === "Running" && !timersStartedRef.current[job.jobId]) {
                 console.log(`Starting timer for job ${job.jobId}`);
                 startTimer(job.jobId); // Start the timer if it’s a new running job
+                // ********************************************************************
+                // MOVE THE JOB TO COMPLETED
+                // ********************************************************************
             }
         });
 
@@ -456,63 +459,6 @@ const Jobs = () => {
         return `${hours}:${minutes}:${secs}`;
     };
 
-
-
-    
-    // const formatTestsToRun = (tests) => {
-    //     // Check if tests is an array and is not empty
-    //     if (!tests || !Array.isArray(tests) || tests.length === 0) return '-';
-    
-    //     // Format each test individually, removing commas and adding <br> tags
-    //     const formattedTests = tests
-    //         .map((test, index) => `${index + 1}) ${test.replace(/,/g, '')}`)
-    //         .join('<br />');
-    
-    //     return formattedTests;
-    // };
-
-    // const renderJobRow = (job, isWaiting) => {
-    //     return (
-    //         <tr key={job.jobId}>
-    //             <td>{job.jobId}</td>
-    //             <td>{job.jobName}</td>
-    //             {/* <td dangerouslySetInnerHTML={{ __html: formatTestsToRun(job.testsToRun) }}></td> */}
-    //             <td>{job.testToRun}</td>
-    //             <td>{job.resourcePool}</td>
-    //             <td>{job.buildVersion}</td>
-    //             <td>{job.jobRunType}</td>
-    //             <td>{job.scheduleType}</td>
-    //             <td>{job.scheduleTime}</td>
-    //             <td>{job.priorityLevel}</td>                
-    //             <td>{job.createdDate}</td>
-    //             <td>{job.createdTime}</td>
-    //             <td>{job.activationStatus}</td>
-    //             <td>{job.estimatedTime}</td>
-    //             <td>
-    //             <button className="action-btn pause-resume-btn" onClick={() => changeResumeJob(job)}>
-    //                 {isPaused(job) ? (
-    //                 <img src={resumeIcon} alt="Resume" className="icon" />
-    //                 ) : (
-    //                 <img src={pauseIcon} alt="Pause" className="icon" />
-    //                 )}
-    //             </button>
-    //             </td>
-    //             {isWaiting  && (
-    //                 <td>
-    //                     <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
-    //                 </td>
-    //             )}
-    //             {!isWaiting && (
-    //                 <td>
-    //                     <button className="action-btn edit-btn" onClick={() => openEditForm(job)}>Edit</button>
-    //                 </td>
-    //             )}
-    //             <td>
-    //                 <button className="action-btn delete-btn" onClick={() => openDeleteForm(job)}>Delete</button>
-    //             </td>
-    //         </tr>
-    //     );
-    // };
 
     const renderJobRow = (job) => {
         return (
@@ -602,7 +548,6 @@ const Jobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* {waitingJobs.map((job) => renderJobRow(job, true))} */}
                         {waitingJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
@@ -630,7 +575,6 @@ const Jobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* {readyJobs.map((job) => renderJobRow(job, false))} */}
                         {readyJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
@@ -656,13 +600,11 @@ const Jobs = () => {
                         </tr>
                     </thead>
                     <tbody>
-                        {/* {runningJobs.map((job) => renderJobRow(job, false))} */}
                         {runningJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
             </div>
 
-            
             {/* Conditional rendering for Edit and Delete forms */}
             {isEditFormOpen && editingJob && (
                 <EditJobForm job={editingJob} closeForm={closeEditForm} saveJob={handleSaveJob} />
