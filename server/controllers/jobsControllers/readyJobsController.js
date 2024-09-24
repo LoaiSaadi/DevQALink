@@ -1,11 +1,41 @@
 const ReadyJob = require('../../models/jobsModels/readyJobsModel');
+const JobIds = require('../../models/jobsModels/jobIdsModel');
 const moment = require('moment-timezone');
+
+const jobIds = [];
 
 // Handle POST request to add a new ready job
 exports.addReadyJob = async (req, res) => {
     try {
         const {jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob } = req.body;
 
+        // Check if the jobId already exists in the global array
+        if (jobIds.includes(jobId)) {
+            return res.status(400).json({
+                message: 'Job ID already exists, cannot add the same job again'
+            });
+        }
+        jobIds.push(jobId);
+
+        //  // Find or create a record that contains the array of job IDs
+        // let jobIdsRecord = await JobIds.findOne({}); // You might want to adjust the query based on your application
+
+        // // Initialize if it doesn't exist
+        // if (!jobIdsRecord) {
+        //     jobIdsRecord = new JobIds({ jobIds: [] });
+        // }
+
+        // // Check if the jobId already exists in the array
+        // if (jobIdsRecord.jobIds.includes(jobId)) {
+        //     return res.status(400).json({
+        //         message: 'Job ID already exists, cannot add the same job again (ready)',
+        //     });
+        // }
+
+        // // Add the jobId to the array
+        // jobIdsRecord.jobIds.push(jobId);
+        // await jobIdsRecord.save();
+        
         const newJob = new ReadyJob({
             jobId,
             jobName,
@@ -44,6 +74,15 @@ exports.deleteJobById = async (req, res) => {
     try {
         const jobId = req.params.jobId;
         console.log('jobId:', jobId);
+
+        
+        // // Find the record containing the array of job IDs
+        // const jobIdsRecord = await JobIds.findOne({});
+        // if (!jobIdsRecord || !jobIdsRecord.jobIds.includes(jobId)) {
+        //     return res.status(404).json({
+        //         message: 'Job ID not found in the list (ready)',
+        //     });
+        // }
 
         // Use findOneAndDelete to search by the jobId field and delete the document
         const deletedJob = await ReadyJob.findOneAndDelete({ jobId });

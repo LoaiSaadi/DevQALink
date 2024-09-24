@@ -114,7 +114,6 @@ const Jobs = () => {
                 setRunningJobs(runningJobsData);
                 setCompletedJobs(completedJobsData);
                 setClusters(clustersData);
-                setTrigger(prev => prev + 1); // Trigger re-render to process the new job
             } catch (error) {
                 console.error('Error fetching job data:', error);
             }
@@ -130,7 +129,7 @@ const Jobs = () => {
             const job = await jobData.json();
             console.log("Moving this job from waiting to ready: ", job);
 
-            if (job.resumeJob === "Resume") {
+            if (job && job.resumeJob === "Resume") {
                 // API to insert the job into ReadyJobs
                 await fetch(`http://localhost:3000/jobs/readyJobs/addJob`, { 
                     method: 'POST',
@@ -145,8 +144,16 @@ const Jobs = () => {
                 });
                 console.log(`Job ${jobId} deleted from WaitingJobs`);
                 
-                readyJobsQueue.current.push(job).sort((a, b) => a.priorityLevel - b.priorityLevel);;
+                // .sort((a, b) => a.priorityLevel - b.priorityLevel);
+                // readyJobsQueue.current.push(job);
+
+                await readyJobsQueue.current.push(job);
+                console.log(`readyJobsQueue after pushing ${job.jobId} is :`, readyJobsQueue.current);
+                await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+                console.log(`readyJobsQueue after sorting ${job.jobId} is :`, readyJobsQueue.current);
+
                 setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+                await sleep(1000);
 
                 handleJobDeleted(); // Update the waiting jobs and ready jobs lists
         }
@@ -158,7 +165,7 @@ const Jobs = () => {
 
     // Polling mechanism to check scheduleTime every minute
     useEffect(() => {
-        const checkJobsSchedule = () => {
+        const checkJobsSchedule = async () => {
             const currentTime = new Date();
             const jerusalemTime = new Intl.DateTimeFormat('en-US', {
                 timeZone: 'Asia/Jerusalem',
@@ -169,12 +176,20 @@ const Jobs = () => {
 
             console.log('Checking jobs schedule at Jerusalem time:', jerusalemTime);
 
+            // // Iterate over waitingJobs and check if any job's scheduleTime matches the current time
+            // waitingJobs.forEach((job) => {
+            //     if (job.jobRunType === "Scheduled" && job.activationStatus === "Activated" && job.scheduleTime === jerusalemTime) {
+            //         moveJobToReady(job.jobId); // Move job to ReadyJobs if the scheduleTime matches
+            //     }
+            // });
+
             // Iterate over waitingJobs and check if any job's scheduleTime matches the current time
-            waitingJobs.forEach((job) => {
-                if (job.jobRunType === "Scheduled" && job.activationStatus === "Activated" && job.scheduleTime === jerusalemTime) {
-                    moveJobToReady(job.jobId); // Move job to ReadyJobs if the scheduleTime matches
+            const waitingJobsCopy = [...waitingJobs]; // Create a shallow copy of waitingJobs
+            for (const job of waitingJobs) {
+                if (job && job.jobRunType === "Scheduled" && job.activationStatus === "Activated" && job.scheduleTime === jerusalemTime) {
+                    await moveJobToReady(job.jobId); // Await moving job to ReadyJobs if the scheduleTime matches
                 }
-            });
+            }
         };
 
         const startPollingAtNextMinute = () => {
@@ -209,9 +224,9 @@ const Jobs = () => {
             // Fetch the job from ReadyJobs instead of WaitingJobs
             const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${jobId}`); 
             const job = await jobData.json();
-            console.log("Moving this job from ready to running: ", job);
+            await console.log("Moving this job from ready to running: ", job);
 
-            if (job.resumeJob === "Resume") {
+            if (job && job.resumeJob === "Resume") {
                 const availableCluster = await fetch(`http://localhost:3000/management/pools/findClusterAndUpdate`, {
                     method: 'PUT',
                     headers: {
@@ -219,14 +234,14 @@ const Jobs = () => {
                     },
                     body: JSON.stringify(job)
                 });
-                console.log("Available cluster HERE: ", availableCluster);
+                await console.log("Available cluster HERE: ", availableCluster);
                 
                 const result = await availableCluster.json();
-                console.log("Result HERE: ", result);
+                await console.log("Result HERE: ", result);
 
                 // const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${job.jobId}`); 
                 // const job = await jobData.json();
-                console.log("Moving this job from ready to running after updating: ", result.newJob);
+                await console.log("Moving this job from ready to running after updating: ", result.newJob);
 
                 if (result.success) {
                     // API to insert the job into RunningJobs
@@ -235,29 +250,35 @@ const Jobs = () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(result.newJob), // assuming job object is enough to insert it
                     });
-                    console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
+                    await console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
                     
                     // API to delete the job from ReadyJobs
                     await fetch(`http://localhost:3000/jobs/readyJobs/deleteJobById/${jobId}`, { 
                         method: 'DELETE',
                     });
-                    console.log(`Job ${jobId} deleted from ReadyJobs`);
+                    await console.log(`Job ${jobId} deleted from ReadyJobs`);
                     
-                     // Remove the job from readyJobsQueue
-                    readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId).sort((a, b) => a.priorityLevel - b.priorityLevel);;
+                     // Remove the job from readyJobsQueue (.sort((a, b) => a.priorityLevel - b.priorityLevel);)
+                    // readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId);
+                    await readyJobsQueue.current.filter(j => j.jobId !== jobId);
+                    await console.log('readyJobsQueue after removing:', readyJobsQueue.current);
 
-                    handleJobDeleted(); // Update the ready jobs and running jobs lists
+                    await handleJobDeleted(); // Update the ready jobs and running jobs lists
                 }
                 else {
                     // throw new Error(`HTTP error! status: ${availableCluster.status}`);
-                    console.log('Error finding available cluster.');
+                    await console.log('Error finding available cluster.');
                 }
             }
             
         } catch (error) {
-            console.error(`Error moving job ${jobId} to RunningJobs:`, error);
+            await console.error(`Error moving job ${jobId} to RunningJobs:`, error);
         }
     }, []); 
+
+
+    // Helper function to pause for a specified duration (in milliseconds)
+    const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 
     // Effect to run jobs when readyJobsQueue array changes
@@ -265,19 +286,33 @@ const Jobs = () => {
         const processJobs = async () => {
             if (readyJobsQueue.current.length === 0) return; // No jobs to process
 
+            // Sleep for 0.5 seconds (500 milliseconds) before starting the loop
+            await sleep(1000);
+
+            const readyJobsQueueCopy = [...readyJobsQueue.current];
+
+            await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+            console.log('Processing jobs from readyJobsQueueCopy HEHE:', readyJobsQueueCopy);
+
             for (const job of readyJobsQueue.current) {
                 try {
-                    console.log(`Processing job ${job.jobId}...`);
-                    await moveJobToRunning(job.jobId); // Assuming this moves the job to running
+                    const id = job.jobId;
+                    console.log(`Processing job ${id}...`);
+                    await moveJobToRunning(id); // Assuming this moves the job to running
 
-                    console.log(`Job ${job.jobId} has been moved to running.`);
+                    console.log(`Job ${id} has been moved to running.`);
                 } catch (error) {
                     console.error(`Error processing job ${job.jobId}:`, error);
                 }
             }
 
             // Clear the readyJobsQueue array after processing all jobs
-            //readyJobsQueue.current = [];
+            if (readyJobsQueue.current.length === 0) {
+                readyJobsQueue.current = [];
+            }
+            else{
+                processJobs();
+            }
         };
 
         console.log('Processing jobs from readyJobsQueue...');
@@ -286,8 +321,19 @@ const Jobs = () => {
     }, [trigger, moveJobToRunning]);  // Re-run the effect whenever trigger changes (new job added)
 
 
+    // useEffect( () => {
+    //     const Go = async () => {
+    //         await sleep(1000);
+    //         console.log('readyJobsQueue:', readyJobsQueue.current);
+    //     };
 
-    // Memoize moveJobToRunning using useCallback
+    //     // await sleep(1000);
+    //     // await fetchReadyJobsData();
+    //     Go();
+    // }, [readyJobs]);  // Re-run the effect whenever readyJobs changes (new job added)
+
+
+    // Memoize moveJobToCompleted using useCallback
     const moveJobToCompleted = useCallback(async (jobId) => {
         try {
             // Fetch the job from RunningJobs instead of ReadyJobs
@@ -389,14 +435,14 @@ const Jobs = () => {
     };
     
     const changeResumeJob = async (job) => {
-        if (job.resumeJob === "Pause") {
+        if (job && job.resumeJob === "Pause") {
             job.resumeJob = "Resume";
         }
         else {
             job.resumeJob = "Pause";
         }
         try {
-            if (job.status === "Waiting") {
+            if (job && job.status === "Waiting") {
                 await fetch(`http://localhost:3000/jobs/waitingJobs/updateJobById/${job.jobId}`, {
                     method: 'PUT',
                     headers: {
@@ -427,7 +473,7 @@ const Jobs = () => {
     };
 
     const isPaused =  (job) => {
-        if (job.resumeJob === "Pause") {
+        if (job && job.resumeJob === "Pause") {
             return true;
         }
         else {
@@ -491,7 +537,7 @@ const Jobs = () => {
 
         timersStartedRef.current[jobId] = true; // Mark timer as started
 
-        const min_duration = 20;
+        const min_duration = 40;
         const max_duration = 50;
         const randomDuration = Math.floor(Math.random() * (max_duration - min_duration + 1)) + min_duration; // Random duration between 20-50 seconds
         console.log(`Job ${jobId} will run for ${randomDuration} seconds`);
