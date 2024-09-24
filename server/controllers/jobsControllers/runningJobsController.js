@@ -31,6 +31,7 @@ exports.addRunningJob = async (req, res) => {
             estimatedTime,
             activationStatus,
             resumeJob,
+            runningCluster
         } = req.body;
 
         // Create a new RunningJob object
@@ -50,6 +51,7 @@ exports.addRunningJob = async (req, res) => {
             activationStatus,
             resumeJob,
             duration: '00:00:00',
+            runningCluster
         });
 
         // Save the new RunningJob object

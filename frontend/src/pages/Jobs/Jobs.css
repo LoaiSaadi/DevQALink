@@ -139,3 +139,7 @@ h1 {
 .test-status-failed {
     color: red;
 }
+
+.job-duration {
+    color: blue;
+}

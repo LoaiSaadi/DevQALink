@@ -1,5 +1,7 @@
 // server/models/readyJobModel.js
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
 
 const completedJobSchema = new mongoose.Schema({
     jobId: { type: Number },
@@ -21,6 +23,8 @@ const completedJobSchema = new mongoose.Schema({
     testStatus: { type: String },
     completedDate: { type: String, required: true },
     completedTime: { type: String, required: true },
+    // runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
+    runnedOnCluster: { type: String, required: true }
 });
 
 const CompletedJob = mongoose.model('CompletedJob', completedJobSchema);

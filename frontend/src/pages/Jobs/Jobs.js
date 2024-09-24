@@ -65,6 +65,20 @@ const fetchCompletedJobsData = async () => {
     }
 };
 
+const fetchClustersData = async () => {
+    try {
+        const response = await fetch('http://localhost:3000/management/clusters/allClusters');
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error fetching clusters data:', error);
+        throw error;
+    }
+};
+
 const Jobs = () => {
     const [waitingJobs, setWaitingJobs] = useState([]);
     const [readyJobs, setReadyJobs] = useState([]);
@@ -80,6 +94,8 @@ const Jobs = () => {
     const readyJobsQueue = useRef([]);  // This holds the jobs ready to be processed
     const [trigger, setTrigger] = useState(0); // A state to trigger re-renders
 
+    const [clusters, setClusters] = useState([]);
+
 
 
 
@@ -87,14 +103,18 @@ const Jobs = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
+
                 const waitingJobsData = await fetchWaitingJobsData();
                 const readyJobsData = await fetchReadyJobsData();
                 const runningJobsData = await fetchRunningJobsData();
                 const completedJobsData = await fetchCompletedJobsData();
+                const clustersData = await fetchClustersData();
                 setWaitingJobs(waitingJobsData);
                 setReadyJobs(readyJobsData);
                 setRunningJobs(runningJobsData);
                 setCompletedJobs(completedJobsData);
+                setClusters(clustersData);
+                setTrigger(prev => prev + 1); // Trigger re-render to process the new job
             } catch (error) {
                 console.error('Error fetching job data:', error);
             }
@@ -125,7 +145,7 @@ const Jobs = () => {
                 });
                 console.log(`Job ${jobId} deleted from WaitingJobs`);
                 
-                readyJobsQueue.current.push(job);
+                readyJobsQueue.current.push(job).sort((a, b) => a.priorityLevel - b.priorityLevel);;
                 setTrigger(prev => prev + 1); // Trigger re-render to process the new job
 
                 handleJobDeleted(); // Update the waiting jobs and ready jobs lists
@@ -203,12 +223,17 @@ const Jobs = () => {
                 
                 const result = await availableCluster.json();
                 console.log("Result HERE: ", result);
+
+                // const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${job.jobId}`); 
+                // const job = await jobData.json();
+                console.log("Moving this job from ready to running after updating: ", result.newJob);
+
                 if (result.success) {
                     // API to insert the job into RunningJobs
                     await fetch(`http://localhost:3000/jobs/runningJobs/addJob`, { 
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(job), // assuming job object is enough to insert it
+                        body: JSON.stringify(result.newJob), // assuming job object is enough to insert it
                     });
                     console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
                     
@@ -219,7 +244,7 @@ const Jobs = () => {
                     console.log(`Job ${jobId} deleted from ReadyJobs`);
                     
                      // Remove the job from readyJobsQueue
-                    readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId);
+                    readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId).sort((a, b) => a.priorityLevel - b.priorityLevel);;
 
                     handleJobDeleted(); // Update the ready jobs and running jobs lists
                 }
@@ -523,7 +548,6 @@ const Jobs = () => {
                     const formattedDuration = formatTime(finalDuration);
                     await saveDuration(job.jobId, formattedDuration);
                     console.log(`Final duration for job ${job.jobId}: ${finalDuration} seconds`);
-                    // You can move the job to completed here if needed
                     await freeTheCluster(job);
                     moveJobToCompleted(job.jobId);
                     setTrigger(prev => prev + 1); // Trigger re-render to process the new job
@@ -566,7 +590,21 @@ const Jobs = () => {
                 <td>{job.jobRunType}</td>
                 <td>{job.scheduleType}</td>
                 <td>{job.scheduleTime}</td>
-                <td>{job.priorityLevel}</td>                
+                <td>{job.priorityLevel}</td>
+
+                {job.status === "Running" && (
+                    <td>
+                        {(() => {
+                            const cluster = clusters.find(cluster => cluster._id === job.runningCluster);
+                            return cluster ? cluster.clusterName : '-';
+                        })()}
+                    </td>
+                )}
+
+                {job.status === "Completed" && (
+                    <td>{job.runnedOnCluster}</td>
+                )}
+
                 <td>{job.createdDate}</td>
                 <td>{job.createdTime}</td>
                 <td>{job.activationStatus}</td>
@@ -606,7 +644,7 @@ const Jobs = () => {
                 )}
 
                 {job.status === "Completed" && (
-                    <td>{job.duration}</td>
+                    <td className="job-duration">{job.duration}</td>
                 )}
 
                 {job.status === "Completed" && (
@@ -702,6 +740,7 @@ const Jobs = () => {
                             <th>Schedule Type</th>
                             <th>Schedule Time</th>
                             <th>Priority Level</th>
+                            <th>Allocated Cluster</th>
                             <th>Created Date</th>
                             <th>Created Time</th>
                             <th>Activation Status</th>
@@ -727,6 +766,7 @@ const Jobs = () => {
                             <th>Schedule Type</th>
                             <th>Schedule Time</th>
                             <th>Priority Level</th>
+                            <th>Runned On Cluster</th>
                             <th>Created Date</th>
                             <th>Created Time</th>
                             <th>Activation Status</th>

@@ -1,6 +1,7 @@
 // server/models/readyJobModel.js
 const mongoose = require('mongoose');
 const autoIncrement = require('mongoose-sequence')(mongoose);
+const Schema = mongoose.Schema;
 
 const readyJobSchema = new mongoose.Schema({
     jobId: { type: Number },
@@ -17,7 +18,8 @@ const readyJobSchema = new mongoose.Schema({
     createdTime: { type: String, required: true },
     status: { type: String, default: 'Ready' },
     activationStatus: { type: String, default: 'Activated' },
-    resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true }
+    resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true },
+    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
 });
 
 const ReadyJob = mongoose.model('ReadyJob', readyJobSchema);

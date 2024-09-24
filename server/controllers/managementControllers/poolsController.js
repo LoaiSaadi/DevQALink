@@ -1,5 +1,7 @@
 const Pool = require('../../models/managementModels/poolsModel');
 const Cluster = require('../../models/managementModels/clustersModel');  // Assuming you have a Cluster model
+const ReadyJob = require('../../models/jobsModels/readyJobsModel');
+const RunningJob = require('../../models/jobsModels/runningJobsModel');
 const moment = require('moment-timezone');
 const mongoose = require('mongoose');
 
@@ -153,61 +155,13 @@ exports.removeClusterFromPoolById = async (req, res) => {
     }
 };
 
-
-// exports.findClusterAndUpdate = async (req, res) => {
-//     const {   resourcePool} = req.body;
-
-//     console.log('resourcePool LOL:', resourcePool);
-//     // try {
-//         // Find the pool with the given resourcePool name
-//         const pool = await Pool.findOne({ poolName: resourcePool });
-//         console.log('pool LOL:', pool);
-
-//         if (!pool) {
-//             return res.status(404).json({ message: 'Pool not found' });
-//         }
-
-//         // Fetch all clusters in this pool by their IDs
-//         const clusterIds = pool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
-//         console.log('clusterIds LOL:', clusterIds);
-//         const clusters = await Cluster.find({ _id: { $in: clusterIds } });
-//         console.log('clusters LOL:', clusters);
-
-//         // Find an available cluster within the fetched clusters
-//         const availableCluster = clusters.find(cluster => cluster.clusterStatus === 'Available');
-//         console.log('availableCluster LOL:', availableCluster);
-//         if (!availableCluster) {
-//             // res.status(404).json({ message: 'No available cluster found in the pool', cluster: null });
-//             // res.json(null);
-//             // res.status(404).json({ cluster: null });
-//             // res.josn(availableCluster)
-//             // return res.status(200).json({ ok: false, message: 'No available cluster found in the pool' });
-//             res.josn(null);
-//         }
-
-//         else {
-//             // Update the status of the found cluster to 'Busy'
-//             availableCluster.clusterStatus = 'Running';
-
-//             // Save the updated pool document to the database
-//             await availableCluster.save();
-//             // await pool.save();// Send the updated cluster back in the response
-
-//             return res.json(availableCluster);
-//         }
-
-//     // } catch (error) {
-//     //     console.error('Error finding and updating the cluster:', error);
-//     //     res.status(500).json({ message: 'Server error' });
-//     // }
-// };
-
 exports.findClusterAndUpdate = async (req, res) => {
-    const { resourcePool } = req.body;
+    const job  = req.body;
+    console.log('Received job:', job);
 
     try {
         // Find the pool with the given resourcePool name
-        const pool = await Pool.findOne({ poolName: resourcePool });
+        const pool = await Pool.findOne({ poolName: job.resourcePool });
         if (!pool) {
             return res.status(404).json({ ok: false, message: 'Pool not found' });
         }
@@ -228,8 +182,27 @@ exports.findClusterAndUpdate = async (req, res) => {
         availableCluster.clusterStatus = 'Running';
         await availableCluster.save();
 
+        // const newJob = await ReadyJob.findOne(job);
+        // console.log('newJob1:', newJob);
+        // newJob.runningCluster = availableCluster;
+        // console.log('newJob2:', newJob);
+        // await newJob.save();
+
+        // Find and update the job with the new running cluster
+        const newJob = await ReadyJob.findOne({ _id: job._id });
+        console.log('newJob12:', newJob);
+        if (!newJob) {
+            return res.status(404).json({ ok: false, message: 'Job not found' });
+        }
+
+        newJob.runningCluster = availableCluster._id;  // Save the ObjectId of the cluster
+        console.log('newJob324:', newJob);
+        await newJob.save();
+
+        console.log('Updated job with running cluster:', newJob);
+
         // Send the updated cluster back in the response with ok: true
-        return res.status(200).json({ success: true, cluster: availableCluster });
+        return res.status(200).json({ newJob, success: true, cluster: availableCluster });
     } catch (error) {
         console.error('Error finding and updating the cluster:', error);
         return res.status(500).json({ ok: false, message: 'Server error' });
@@ -237,9 +210,9 @@ exports.findClusterAndUpdate = async (req, res) => {
 };
 
 exports.freeCluster = async (req, res) => {
-    const { job } = req.body;
+    const {job} = req.body;
 
-    console.log('Received job:', job);
+    console.log('Received job freeCluster:', job);
     
     try {
         // Find the resource pool by name
@@ -256,8 +229,7 @@ exports.freeCluster = async (req, res) => {
         const clusters = await Cluster.find({ _id: { $in: clusterIds } });
 
         // Find the running cluster within the resource pool's clusters array
-        const runningCluster = clusters.find(cluster => cluster.clusterStatus === 'Running');
-        console.log('Running Cluster found:', runningCluster);
+        const runningCluster = clusters.find(cluster => cluster._id.equals(job.runningCluster));
         
         if (!runningCluster) {
             console.log('No running cluster found in the specified resource pool:', job.resourcePool);

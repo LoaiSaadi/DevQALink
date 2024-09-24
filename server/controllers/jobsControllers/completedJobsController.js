@@ -1,4 +1,5 @@
 const CompletedJob = require('../../models/jobsModels/completedJobsModel');
+const Cluster = require('../../models/managementModels/clustersModel');
 const moment = require('moment-timezone');
 
 exports.getCompletedJobs = async (req, res) => {
@@ -43,6 +44,7 @@ exports.addCompletedJob = async (req, res) => {
             activationStatus,
             resumeJob,
             duration,
+            runningCluster
         } = req.body;
 
         const result = Math.random() < 0.7 ? 'Succeeded' : 'Failed';
@@ -50,6 +52,26 @@ exports.addCompletedJob = async (req, res) => {
         const nowInJerusalem = moment().tz('Asia/Jerusalem');
         const completedDate = nowInJerusalem.format('YYYY-MM-DD');
         const completedTime = nowInJerusalem.format('HH:mm:ss');
+
+        // // Fetch all clusters in this pool by their IDs
+        // const clusterIds = resourcePool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
+        // console.log('clusterIds:', clusterIds);
+        // const clusters = await Cluster.find({ _id: { $in: clusterIds } });
+        // console.log('clusters:', clusters);
+
+        // // Find the running cluster within the resource pool's clusters array
+        // const runnedOnCluster = clusters.find(cluster => cluster._id.equals(runningCluster)).clusterName;
+        // console.log('runnedOnCluster:', runnedOnCluster);
+
+        // Find the cluster from the Cluster collection using runningCluster._id
+        const cluster = await Cluster.findById(runningCluster);
+        console.log('cluster32:', cluster);
+        if (!cluster) {
+            return res.status(404).json({ message: 'Running cluster not found' });
+        }
+
+        const runnedOnCluster = cluster.clusterName;
+        console.log('runnedOnCluster32:', runnedOnCluster);
 
         // Create a new CompletedJob object
         const newJob = new CompletedJob({
@@ -71,6 +93,8 @@ exports.addCompletedJob = async (req, res) => {
             testStatus: result,
             completedDate,
             completedTime,
+            // runningCluster
+            runnedOnCluster
         });
 
         // Save the new CompletedJob object

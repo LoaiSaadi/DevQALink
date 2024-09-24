@@ -21,7 +21,8 @@ exports.addReadyJob = async (req, res) => {
             createdTime,
             activationStatus,
             jobStatus: 'Ready',
-            resumeJob
+            resumeJob,
+            runningCluster: null
         });
         
         const savedJob = await newJob.save();

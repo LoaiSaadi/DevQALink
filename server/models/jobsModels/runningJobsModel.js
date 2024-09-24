@@ -1,6 +1,8 @@
 // server/models/readyJobModel.js
 const { duration } = require('moment-timezone');
 const mongoose = require('mongoose');
+const Schema = mongoose.Schema;
+
 
 const runningJobSchema = new mongoose.Schema({
     jobId: { type: Number },
@@ -19,6 +21,7 @@ const runningJobSchema = new mongoose.Schema({
     activationStatus: { type: String, default: 'Activated' },
     resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true },
     duration: { type: String, required: true },
+    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
 });
 
 const RunningJob = mongoose.model('RunningJob', runningJobSchema);
