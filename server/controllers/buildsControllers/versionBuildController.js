@@ -12,3 +12,24 @@ exports.getAllVersionBuilds = async (req, res) => {
         });
     }
 };
+
+// Create multiple new version builds
+exports.createVersionBuilds = async (req, res) => {
+    try {
+        // Expecting an array of version builds in the request body
+        const newVersionBuilds = req.body; // This should be an array
+
+        // Insert multiple version builds
+        const savedBuilds = await VersionBuild.insertMany(newVersionBuilds);
+        res.status(201).json({
+            message: 'Version builds created successfully',
+            builds: savedBuilds
+        });
+    } catch (error) {
+        console.error('Error creating version builds:', error);
+        res.status(500).json({
+            message: 'Error creating version builds',
+            error: error.message
+        });
+    }
+};

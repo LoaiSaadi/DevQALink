@@ -19,7 +19,7 @@ const TopTabs = () => {
         { text: 'Home', icon: <HomeIcon />, link: '/' },
         { text: 'QA Testers', icon: <QaIcon />, link: '/qa' },
         { text: 'Dev Builds', icon: <BuildIcon />, link: '/builds' },
-        { text: 'Management', icon: <ManagementIcon />, link: '/management' },
+        { text: 'Resources', icon: <ManagementIcon />, link: '/resources' },
         { text: 'Jobs', icon: <JobsIcon />, link: '/jobs' },
         { text: 'Reports', icon: <ReportsIcon />, link: '/reports' },
     ];

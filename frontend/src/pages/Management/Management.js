@@ -99,23 +99,6 @@ const Management = () => {
         fetchData();
     }, []);
 
-    
-    // useEffect(() => {
-    //     const fetchData = async () => {
-    //         try {
-    //             const poolsData = await fetchPoolsData();
-    //             setPools(poolsData);
-    //             const clustersData = await fetchClustersData();
-    //             setClusters(clustersData);
-    //         } catch (error) {
-    //             console.error('Error fetching data:', error);
-    //         }
-    //     };
-
-    //     fetchData();
-    // }, []);
-
-
     // Server form handlers
     const openServerForm = () => {
         setIsAddingServer(true);
@@ -337,16 +320,6 @@ const Management = () => {
                 console.error('Error updating test runner server:', error);
             }
 
-            // try {
-            //     const response = await fetch(`http://localhost:3000/management/clusters/updateClusterById/${deletedCluster._id}`, {
-            //         method: 'PUT',
-            //         headers: {
-            //             'Content-Type': 'application/json',
-            //         },
-            //         body: JSON.stringify({ isDeleted: true }),
-            //     )
-            // }
-
             // Perform cluster deletion here (e.g., using a DELETE request)
             const updatedServers = await fetchServersData();
             const updatedClusters = await fetchClustersData();
@@ -427,38 +400,37 @@ const Management = () => {
         <div className="management-container">
             <h1>Resources Management</h1>
 
-            {/* Servers Section */}
-            <h2>Servers</h2>
-            <button onClick={openServerForm}>Add Server</button>
-            {isServerFormOpen && (
-                isAddingServer ? (
-                    <ServerForm
-                        closeForm={closeServerForm}
-                        onServerAdded={handleServerAdded} // Handler for saving new servers
-                    />
+            <p style={{ fontSize: '1.2em' }}>
+            This section enables efficient management of resource pools, clusters, and servers,
+            allowing you to add, edit, or delete resources as needed.
+            </p>
+
+            <hr className="separator" />
+    
+            {/* Pools Section */}
+            <h2>Pools</h2>
+            <p style={{ fontSize: '1.2em' }}>This section allows you to manage resource pools, including adding, editing, and deleting pools.</p>
+            <button onClick={openPoolForm}>Add Pool</button>
+            {isPoolFormOpen && (
+                isAddingPool ? (
+                    <PoolForm closeForm={closePoolForm} onPoolAdded={handlePoolAdded} />
                 ) : (
-                    <EditServerForm
-                        server={editingServer} // Passing the server object for editing
-                        closeForm={closeServerForm}
-                        saveServer={handleServerUpdated} // Handler for saving updates
-                    />
+                    <EditPoolForm pool={editingPool} closeForm={closePoolForm} savePool={handlePoolUpdated} />
                 )
             )}
-            {isDeleteServerFormOpen && (
-                <DeleteServerForm
-                    server={serverToDelete}
-                    closeForm={closeServerForm}
-                    deleteServer={handleServerDelete} // Handler for deleting servers
-                />
+            {isDeletePoolFormOpen && (
+                <DeletePoolForm pool={poolToDelete} closeForm={closePoolForm} deletePool={handlePoolDelete} />
             )}
-            <table className="servers-table">
+            <table className="pools-table">
                 <thead>
                     <tr>
-                        <th>Server ID</th>
-                        <th>IP Address</th>
+                        <th>Pool ID</th>
+                        <th>Pool Name</th>
                         <th>Description</th>
-                        <th>Is Test Runner</th>
-                        <th>Cluster Connected To</th>
+                        <th>Status</th>
+                        <th>Clusters</th>
+                        <th>Clusters Number</th>
+                        <th>Servers Number</th>
                         <th>Date Created</th>
                         <th>Time Created</th>
                         <th>Edit</th>
@@ -466,33 +438,50 @@ const Management = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {servers.map(server => (
-                        <tr key={server.serverId}>
-                            <td>{server.serverId}</td>
-                            <td>{server.serverIp}</td>
-                            <td>{server.serverDescription}</td>
-                            <td>{server.isTestRunner ? 'Yes' : 'No'}</td>
+                    {pools.map(pool => (
+                        <tr key={pool.poolId}>
+                            <td>{pool.poolId}</td>
+                            <td>{pool.poolName}</td>
+                            <td>{pool.poolDescription}</td>
+                            <td>{pool.poolStatus}</td>
                             <td>
-                            {(() => {
-                                const cluster = clusters.find(cluster => cluster._id === server.clusterConnectedTo);
-                                return cluster ? cluster.clusterName : '-';
-                            })()}
+                                <div className="clusters-list">
+                                    {pool.clusters && pool.clusters.length > 0 ? (
+                                        <ul>
+                                            {pool.clusters.map((clusterId, index) => {
+                                                const matchingCluster = clusters.find(cluster => cluster._id === clusterId);
+                                                return (
+                                                    <li key={index}>
+                                                        {matchingCluster ? matchingCluster.clusterName : '-'}
+                                                    </li>
+                                                );
+                                            })}
+                                        </ul>
+                                    ) : (
+                                        <div className="no-clusters">-</div>
+                                    )}
+                                </div>
                             </td>
-                            <td>{server.createdDate}</td>
-                            <td>{server.createdTime}</td>
+                            <td>{pool.clustersNumber}</td>
+                            <td>{pool.serversNumber}</td>
+                            <td>{pool.createdDate}</td>
+                            <td>{pool.createdTime}</td>
                             <td>
-                                <button className='action-btn edit-btn' onClick={() => openEditServerForm(server)}>Edit</button>
+                                <button className="action-btn edit-btn" onClick={() => openEditPoolForm(pool)}>Edit</button>
                             </td>
                             <td>
-                                <button className="action-btn delete-btn" onClick={() => openDeleteServerForm(server)}>Delete</button>
+                                <button className="action-btn delete-btn" onClick={() => openDeletePoolForm(pool)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
+            <hr style={{ margin: '20px 0' }} />
+    
             {/* Clusters Section */}
             <h2>Clusters</h2>
+            <p style={{ fontSize: '1.2em' }}>This section allows you to manage clusters associated with resource pools.</p>
             <button onClick={openClusterForm}>Add Cluster</button>
             {isClusterFormOpen && (
                 isAddingCluster ? (
@@ -549,15 +538,9 @@ const Management = () => {
                                             </li>
                                         );
                                     })}
-                                    
                                 </ul>
                             </td>
                             <td>
-                                {/* {(() => {
-                                    const cluster = clusters.find(cluster => cluster._id === server.clusterConnectedTo);
-                                    return cluster ? cluster.clusterName : '-';
-                                })()} */}
-
                                 {(() => {
                                     const pool = pools.find(pool => pool._id === cluster.poolConnectedTo);
                                     return pool ? pool.poolName : '-';
@@ -580,33 +563,45 @@ const Management = () => {
                             </td>
                         </tr>
                     ))}
-                    
                 </tbody>
             </table>
-
-            {/* Pools Section */}
-            <h2>Pools</h2>
-            <button onClick={openPoolForm}>Add Pool</button>
-            {isPoolFormOpen && (
-                isAddingPool ? (
-                    <PoolForm closeForm={closePoolForm} onPoolAdded={handlePoolAdded} />
+    
+            {/* Separator for Clusters */}
+            <hr style={{ margin: '20px 0' }} />
+    
+            {/* Servers Section */}
+            <h2>Servers</h2>
+            <p style={{ fontSize: '1.2em' }}>This section allows you to manage servers within your clusters.</p>
+            <button onClick={openServerForm}>Add Server</button>
+            {isServerFormOpen && (
+                isAddingServer ? (
+                    <ServerForm
+                        closeForm={closeServerForm}
+                        onServerAdded={handleServerAdded} // Handler for saving new servers
+                    />
                 ) : (
-                    <EditPoolForm pool={editingPool} closeForm={closePoolForm} savePool={handlePoolUpdated} />
+                    <EditServerForm
+                        server={editingServer} // Passing the server object for editing
+                        closeForm={closeServerForm}
+                        saveServer={handleServerUpdated} // Handler for saving updates
+                    />
                 )
             )}
-            {isDeletePoolFormOpen && (
-                <DeletePoolForm pool={poolToDelete} closeForm={closePoolForm} deletePool={handlePoolDelete} />
+            {isDeleteServerFormOpen && (
+                <DeleteServerForm
+                    server={serverToDelete}
+                    closeForm={closeServerForm}
+                    deleteServer={handleServerDelete} // Handler for deleting servers
+                />
             )}
-            <table className="pools-table">
+            <table className="servers-table">
                 <thead>
                     <tr>
-                        <th>Pool ID</th>
-                        <th>Pool Name</th>
+                        <th>Server ID</th>
+                        <th>IP Address</th>
                         <th>Description</th>
-                        <th>Status</th>
-                        <th>Clusters</th>
-                        <th>Clusters Number</th>
-                        <th>Servers Number</th>
+                        <th>Is Test Runner</th>
+                        <th>Cluster Connected To</th>
                         <th>Date Created</th>
                         <th>Time Created</th>
                         <th>Edit</th>
@@ -614,62 +609,37 @@ const Management = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {pools.map(pool => (
-                        <tr key={pool.poolId}>
-                            <td>{pool.poolId}</td>
-                            <td>{pool.poolName}</td>
-                            <td>{pool.poolDescription}</td>
-                            <td>{pool.poolStatus}</td>
+                    {servers.map(server => (
+                        <tr key={server.serverId}>
+                            <td>{server.serverId}</td>
+                            <td>{server.serverIp}</td>
+                            <td>{server.serverDescription}</td>
+                            <td>{server.isTestRunner ? 'Yes' : 'No'}</td>
                             <td>
-                                {/* <ul>
-                                    {pool.clusters.map((clusterId, index) => {
-                                        const matchingCluster = clusters.find(cluster => cluster._id === clusterId);
-                                        return (
-                                            <li key={index}>
-                                                {matchingCluster ? matchingCluster.clusterName : '-'}
-                                            </li>
-                                        );
-                                    })}
-
-                                </ul> */}
-
-                                
-                                <div className="clusters-list">
-                                    {pool.clusters && pool.clusters.length > 0 ? (
-                                        <ul>
-                                            {pool.clusters.map((clusterId, index) => {
-                                                const matchingCluster = clusters.find(cluster => cluster._id === clusterId);
-                                                return (
-                                                    <li key={index}>
-                                                        {matchingCluster ? matchingCluster.clusterName : '-'}
-                                                    </li>
-                                                );
-                                            })}
-                                        </ul>
-                                    ) : (
-                                        <div className="no-clusters">-</div>
-                                    )}
-                                </div>
-
-
+                                {(() => {
+                                    const cluster = clusters.find(cluster => cluster._id === server.clusterConnectedTo);
+                                    return cluster ? cluster.clusterName : '-';
+                                })()}
                             </td>
-                            <td>{pool.clustersNumber}</td>
-                            <td>{pool.serversNumber}</td>
-                            <td>{pool.createdDate}</td>
-                            <td>{pool.createdTime}</td>
+                            <td>{server.createdDate}</td>
+                            <td>{server.createdTime}</td>
                             <td>
-                                <button className="action-btn edit-btn" onClick={() => openEditPoolForm(pool)}>Edit</button>
+                                <button className='action-btn edit-btn' onClick={() => openEditServerForm(server)}>Edit</button>
                             </td>
                             <td>
-                                <button className="action-btn delete-btn" onClick={() => openDeletePoolForm(pool)}>Delete</button>
+                                <button className="action-btn delete-btn" onClick={() => openDeleteServerForm(server)}>Delete</button>
                             </td>
                         </tr>
                     ))}
                 </tbody>
             </table>
 
+            <footer className="footer">
+                <p>© {new Date().getFullYear()} QA and Dev Scheduling Framework. All rights reserved.</p>
+            </footer>
         </div>
     );
+    
 };
 
 export default Management;

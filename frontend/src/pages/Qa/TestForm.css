@@ -86,7 +86,7 @@
 
 .submit-btn,
 .cancel-btn {
-    padding: 10px 20px;
+    padding: 10px 20px; /* Match padding for both buttons */
     border: none;
     border-radius: 6px;
     cursor: pointer;
@@ -104,12 +104,18 @@
 }
 
 .cancel-btn {
-    background: #f44336;
+    padding: 10px 20px; /* Match padding with submit-btn */
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
+    background: #f44336; /* Red color */
     color: #fff;
 }
 
 .cancel-btn:hover {
-    background: #e53935;
+    background: #e53935; /* Darker red on hover */
 }
 
 /* Responsive Design */

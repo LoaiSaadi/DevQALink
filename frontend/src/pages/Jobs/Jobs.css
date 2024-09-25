@@ -143,3 +143,11 @@ h1 {
 .job-duration {
     color: blue;
 }
+
+.separator {
+    height: 2px;               /* Thickness of the line */
+    background-color: #ccc;    /* Line color */
+    margin: 20px 0;           /* Space above and below the line */
+    width: 100%;               /* Full width of the container */
+    position: relative;        /* For positioning purposes */
+}

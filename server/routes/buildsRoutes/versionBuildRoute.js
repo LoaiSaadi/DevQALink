@@ -4,5 +4,6 @@ const versionBuildController = require('../../controllers/buildsControllers/vers
 
 // GET request to list all version builds
 router.get('/allVersionBuilds', versionBuildController.getAllVersionBuilds); // http://localhost:3000/builds/allVersionBuilds
+router.post('/createVersionBuilds', versionBuildController.createVersionBuilds); // http://localhost:3000/builds/createVersionBuilds 
 
 module.exports = router;

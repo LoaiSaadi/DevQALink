@@ -147,10 +147,23 @@ const Jobs = () => {
                 // .sort((a, b) => a.priorityLevel - b.priorityLevel);
                 // readyJobsQueue.current.push(job);
 
-                await readyJobsQueue.current.push(job);
-                console.log(`readyJobsQueue after pushing ${job.jobId} is :`, readyJobsQueue.current);
-                await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
-                console.log(`readyJobsQueue after sorting ${job.jobId} is :`, readyJobsQueue.current);
+                // await readyJobsQueue.current.push(job);
+                // console.log(`readyJobsQueue after pushing ${job.jobId} is :`, readyJobsQueue.current);
+                // await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+                // console.log(`readyJobsQueue after sorting ${job.jobId} is :`, readyJobsQueue.current);
+
+                // Check if the jobId already exists in the queue before pushing it
+                const isDuplicate = readyJobsQueue.current.some(queuedJob => queuedJob.jobId === job.jobId);
+
+                if (!isDuplicate) {
+                    await readyJobsQueue.current.push(job);
+                    console.log(`readyJobsQueue after pushing ${job.jobId} is:`, readyJobsQueue.current);
+                    
+                    await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+                    console.log(`readyJobsQueue after sorting ${job.jobId} is:`, readyJobsQueue.current);
+                } else {
+                    console.log(`Job ${job.jobId} is already in the queue, not adding it again.`);
+                }
 
                 setTrigger(prev => prev + 1); // Trigger re-render to process the new job
                 await sleep(1000);
@@ -183,11 +196,32 @@ const Jobs = () => {
             //     }
             // });
 
-            // Iterate over waitingJobs and check if any job's scheduleTime matches the current time
-            const waitingJobsCopy = [...waitingJobs]; // Create a shallow copy of waitingJobs
-            for (const job of waitingJobs) {
-                if (job && job.jobRunType === "Scheduled" && job.activationStatus === "Activated" && job.scheduleTime === jerusalemTime) {
-                    await moveJobToReady(job.jobId); // Await moving job to ReadyJobs if the scheduleTime matches
+            // // Iterate over waitingJobs and check if any job's scheduleTime matches the current time
+            // for (const job of waitingJobs) {
+            //     if (job && job.jobRunType === "Scheduled" && job.activationStatus === "Activated" && job.scheduleTime === jerusalemTime) {
+            //         await moveJobToReady(job.jobId); // Await moving job to ReadyJobs if the scheduleTime matches
+            //     }
+            // }
+
+
+            // Step 1: Filter waitingJobs based on the condition
+            const jobsToMove = await waitingJobs.filter(job => 
+                job && 
+                job.jobRunType === "Scheduled" && 
+                job.activationStatus === "Activated" && 
+                job.scheduleTime === jerusalemTime
+            );
+
+            // Step 2: Sort the filtered jobs by priorityLevel in descending order
+            jobsToMove.sort((a, b) => b.priorityLevel - a.priorityLevel);
+
+            // Step 3: Pass over the sorted array and move each job to ReadyJobs
+            for (const job of jobsToMove) {
+                try {
+                    await moveJobToReady(job.jobId);
+                    console.log(`Moved job ${job.jobId} to ReadyJobs.`);
+                } catch (error) {
+                    console.error(`Error moving job ${job.jobId} to ReadyJobs:`, error);
                 }
             }
         };
@@ -224,9 +258,9 @@ const Jobs = () => {
             // Fetch the job from ReadyJobs instead of WaitingJobs
             const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${jobId}`); 
             const job = await jobData.json();
-            await console.log("Moving this job from ready to running: ", job);
 
             if (job && job.resumeJob === "Resume") {
+                console.log("Moving this job from ready to running: ", job);
                 const availableCluster = await fetch(`http://localhost:3000/management/pools/findClusterAndUpdate`, {
                     method: 'PUT',
                     headers: {
@@ -234,14 +268,14 @@ const Jobs = () => {
                     },
                     body: JSON.stringify(job)
                 });
-                await console.log("Available cluster HERE: ", availableCluster);
+                console.log("Available cluster HERE: ", availableCluster);
                 
                 const result = await availableCluster.json();
-                await console.log("Result HERE: ", result);
+                console.log("Result HERE: ", result);
 
                 // const jobData = await fetch(`http://localhost:3000/jobs/readyJobs/getJobById/${job.jobId}`); 
                 // const job = await jobData.json();
-                await console.log("Moving this job from ready to running after updating: ", result.newJob);
+                console.log("Moving this job from ready to running after updating: ", result.newJob);
 
                 if (result.success) {
                     // API to insert the job into RunningJobs
@@ -250,18 +284,18 @@ const Jobs = () => {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(result.newJob), // assuming job object is enough to insert it
                     });
-                    await console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
+                    console.log(`Job ${jobId} moved from ReadyJobs to RunningJobs`);
                     
                     // API to delete the job from ReadyJobs
                     await fetch(`http://localhost:3000/jobs/readyJobs/deleteJobById/${jobId}`, { 
                         method: 'DELETE',
                     });
-                    await console.log(`Job ${jobId} deleted from ReadyJobs`);
+                    console.log(`Job ${jobId} deleted from ReadyJobs`);
                     
                      // Remove the job from readyJobsQueue (.sort((a, b) => a.priorityLevel - b.priorityLevel);)
                     // readyJobsQueue.current = readyJobsQueue.current.filter(j => j.jobId !== jobId);
                     await readyJobsQueue.current.filter(j => j.jobId !== jobId);
-                    await console.log('readyJobsQueue after removing:', readyJobsQueue.current);
+                    console.log('readyJobsQueue after removing:', readyJobsQueue.current);
 
                     await handleJobDeleted(); // Update the ready jobs and running jobs lists
                 }
@@ -287,20 +321,17 @@ const Jobs = () => {
             if (readyJobsQueue.current.length === 0) return; // No jobs to process
 
             // Sleep for 0.5 seconds (500 milliseconds) before starting the loop
-            await sleep(1000);
-
-            const readyJobsQueueCopy = [...readyJobsQueue.current];
-
-            await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
-            console.log('Processing jobs from readyJobsQueueCopy HEHE:', readyJobsQueueCopy);
+            // await sleep(1000);
+            // await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+            
 
             for (const job of readyJobsQueue.current) {
                 try {
-                    const id = job.jobId;
-                    console.log(`Processing job ${id}...`);
-                    await moveJobToRunning(id); // Assuming this moves the job to running
+                    console.log(`Processing job ${job.jobId}...`);
+                    await moveJobToRunning(job.jobId); // Assuming this moves the job to running
+                    // moveJobToRunning(job.jobId); // Assuming this moves the job to running
 
-                    console.log(`Job ${id} has been moved to running.`);
+                    console.log(`Job ${job.jobId} has been moved to running.`);
                 } catch (error) {
                     console.error(`Error processing job ${job.jobId}:`, error);
                 }
@@ -715,6 +746,22 @@ const Jobs = () => {
     return (
         <div className="jobs-container">
             <h1>Jobs</h1>
+
+            <p style={{ fontSize: '1.2em' }}>
+                This section manages various job types within the system. Below are the tables categorizing jobs based on their status:
+            </p>
+            <div className="job-descriptions">
+                <p style={{ fontSize: '1.2em' }}>
+                    <strong>Waiting Jobs:</strong> Jobs that are queued and awaiting execution.<br />
+                    <strong>Ready Jobs:</strong> Jobs that are ready to run based on their schedule.<br />
+                    <strong>Running Jobs:</strong> Jobs currently in execution.<br />
+                    <strong>Completed Jobs:</strong> Jobs that have finished running.<br />
+                </p>
+            </div>
+
+
+        <div className="separator" /> {/* Separator added here */}
+
             <button className="add-job-btn" onClick={openForm}>Add Job</button>
             {isFormOpen && <JobForm closeForm={closeForm} onJobAdded={handleJobAdded} />}
             
@@ -746,6 +793,8 @@ const Jobs = () => {
                     </tbody>
                 </table>
 
+                <hr style={{ margin: '20px 0' }} />
+
                 <h2>Ready Jobs</h2>
                 <table className="jobs-table ready-jobs">
                     <thead>
@@ -773,6 +822,8 @@ const Jobs = () => {
                     </tbody>
                 </table>
 
+                <hr style={{ margin: '20px 0' }} />
+
                 <h2>Running Jobs</h2>
                 <table className="jobs-table running-jobs">
                     <thead>
@@ -798,6 +849,8 @@ const Jobs = () => {
                         {runningJobs.map((job) => renderJobRow(job))}
                     </tbody>
                 </table>
+
+                <hr style={{ margin: '20px 0' }} />
 
                 <h2>Completed Jobs</h2>
                 <table className="jobs-table running-jobs">
@@ -837,7 +890,13 @@ const Jobs = () => {
             {isDeleteFormOpen && deletingJob && (
                 <DeleteJobForm job={deletingJob} closeForm={closeDeleteForm} deleteJob={handleJobDeleted} />
             )}
+
+            <footer className="footer">
+                <p>© {new Date().getFullYear()} QA and Dev Scheduling Framework. All rights reserved.</p>
+            </footer>
         </div>
+
+        
     );
 };
 

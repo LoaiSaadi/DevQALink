@@ -40,7 +40,6 @@ const Qa = () => {
         fetchData();
     }, []);
 
-
     const openForm = () => {
         setIsAdding(true); // Set form type to add
         setIsFormOpen(true);
@@ -86,7 +85,7 @@ const Qa = () => {
     };
 
     const handleTestAdded = async (newTest) => {
-        console.log('Tring to show :', newTest);
+        console.log('Trying to show:', newTest);
         try {
             const updatedTests = await fetchTestsData();
             setTests(updatedTests);
@@ -98,6 +97,12 @@ const Qa = () => {
     return (
         <div className="qa-container">
             <h1>QA Testers</h1>
+            <p style={{ fontSize: '1.2em' }}>This section manages the QA testing process.</p>
+            <div className="separator" /> {/* Separator after QA Testers description */}
+            
+            <h2>Tests</h2>
+            <p style={{ fontSize: '1.2em' }}>Here you can add, edit, or delete tests.</p>
+            
             <button onClick={openForm}>Add Test</button>
             {isFormOpen && (
                 isAdding ? (
@@ -121,7 +126,6 @@ const Qa = () => {
                 />
             )}
 
-            <h2>Tests</h2>
             <table className="tests-table">
                 <thead>
                     <tr>
@@ -150,6 +154,10 @@ const Qa = () => {
                     ))}
                 </tbody>
             </table>
+
+            <footer className="footer">
+                <p>© {new Date().getFullYear()} QA and Dev Scheduling Framework. All rights reserved.</p>
+            </footer>
         </div>
     );
 };
