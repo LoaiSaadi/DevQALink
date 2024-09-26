@@ -52,6 +52,57 @@ exports.addWaitingJob = async (req, res) => {
     }
 };
 
+
+exports.addSameJob = async (req, res) => {
+    try {
+        const {
+            jobId,
+            jobName,
+            testToRun,
+            resourcePool,
+            buildVersion,
+            jobRunType,
+            scheduleType,
+            scheduleTime,
+            priorityLevel,
+            createdDate,
+            createdTime,
+            estimatedTime,
+            activationStatus,
+        } = req.body;
+
+        const newJob = new WaitingJob({
+            jobId,
+            jobName,
+            testToRun,
+            resourcePool,
+            buildVersion,
+            jobRunType,
+            scheduleType,
+            scheduleTime,
+            priorityLevel,
+            createdDate,
+            createdTime,
+            status: "Waiting",
+            estimatedTime,
+            activationStatus,
+            resumeJob : "Resume"
+        });
+        
+        const savedJob = await newJob.save();
+        res.status(201).json({
+            message: 'Job added successfully',
+            job: savedJob
+        });
+    } catch (error) {
+        console.error('Error saving completed job:', error);
+        res.status(500).json({
+            message: 'Error saving completed job',
+            error: error.message
+        });
+    }
+};
+
 exports.deleteJobById = async (req, res) => {
     try {
         const jobId = req.params.jobId;

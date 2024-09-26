@@ -3,25 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 
-// Simulated array of possible failure reasons
-const failureReasons = [
-    'Network Timeout',
-    'Server Error',
-    'Resource Allocation Failure',
-    'Test Environment Misconfiguration',
-    'Unknown Error',
-    'Database Connection Lost',
-    'Insufficient Memory',
-];
+
 
 // Simulated array of users
 const users = ['User 1', 'User 2', 'User 3', 'User 4', 'User 5'];
 
-// Function to randomly pick a failure reason from the array
-const getRandomFailureReason = () => {
-    const randomIndex = Math.floor(Math.random() * failureReasons.length);
-    return failureReasons[randomIndex];
-};
+
 
 // Function to randomly pick a user from the array
 const getRandomUser = () => {
@@ -92,12 +79,13 @@ const Reports = () => {
     // Create the series data for each cluster
     const series = clusters.map(cluster => {
         return {
-            name: cluster,  // Cluster name (C1, C2, etc.)
+            label: cluster,  // Cluster name (C1, C2, etc.)
             data: Object.keys(successfulJobsByPool).map(pool => {
                 return successfulJobsByPool[pool][cluster] || 0;  // Value for each pool or 0 if not present
             })
         };
     });
+    console.log("series: ", series);
     const labels = Object.keys(successfulJobsByPool);
 
     // Summing up the values for PieChart data (SSD, HDD, SSHD)
@@ -105,6 +93,16 @@ const Reports = () => {
         const totalCount = Object.values(successfulJobsByPool[poolName]).reduce((acc, val) => acc + val, 0);
         return { id: poolName, value: totalCount, label: poolName };
     });
+
+    // Calculate total value
+    const totalValue = pieChartData.reduce((acc, item) => acc + item.value, 0);
+
+    // Prepare data for the PieChart with calculated percentages as values
+    const formattedData = pieChartData.map(item => ({
+        ...item,
+        value: ((item.value / totalValue) * 100).toFixed(2) // Update value to be the percentage
+    }));
+    console.log("formattedData: ", formattedData);
 
     return (
         <div className="reports-container">
@@ -117,19 +115,21 @@ const Reports = () => {
 
             <h2>Pools Usage</h2>
             <p style={{ fontSize: '1.2em' }}>Successful jobs distributed across resource pools and clusters.</p>
+
             <BarChart
                 series={series}  // Dynamically generated series
-                height={300}
+                height={400}
                 xAxis={[{ data: labels, scaleType: 'band' }]}  // Pool names (HDD, SSD, SSHD)
                 margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
             />
+
             <div className="separator" />
 
             <h2>Pool Distribution</h2>
             <p style={{ fontSize: '1.2em' }}>Summary of successful jobs per resource pool.</p>
             <PieChart
                 series={[{
-                    data: pieChartData,
+                    data: formattedData,
                 }]}
                 width={400}
                 height={200}
@@ -142,9 +142,8 @@ const Reports = () => {
             <div className="cards-container">
                 {completedJobs.map((job, index) => (
                     <div key={index} className="report-card">
-                        <h3>Job Report</h3>
+                        <h3>Job .{job.jobId} Report</h3>
                         <p><strong>Job: </strong> {job.jobName}</p>
-                        <p><strong>Job ID: </strong> {job.jobId}</p>
                         <p><strong>Version-Build: </strong> {job.buildVersion}</p>
                         <p><strong>Cluster Details: </strong> {job.runnedOnCluster}</p>
 
@@ -153,14 +152,12 @@ const Reports = () => {
                                 {job.testStatus}
                             </span>
                         </p>
-                        <p><strong>Failure Reason: </strong> 
-                            {job.testStatus === 'Failed' ? getRandomFailureReason() : '-'}
-                        </p>
+                        <p><strong>Failure Reason: </strong>{job.failureReason}</p>
                         <p><strong>Runtime Duration: </strong> {job.duration}</p>
                         <p><strong>Date: </strong> {job.completedDate}</p>
                         <p><strong>Triggered By: </strong> {getRandomUser()}</p>
 
-                        <button className="open-bug-btn" onClick={() => openBug(job.jobId)}>Open Bug</button>
+                        <button className="open-bug-btn" onClick={() => openBug(job)}>Open Bug</button>
                         <button className="send-report-btn" onClick={() => sendReportToUser(getRandomUser())}>Send Report</button>
                     </div>
                 ))}
@@ -173,9 +170,27 @@ const Reports = () => {
     );
 };
 
-const openBug = (jobId) => {
-    alert(`Open bug for Job ID: ${jobId}`);
-    // Implement logic to open a bug using a 3rd party tool (like Jira)
+// Update openBug to accept the job object
+const openBug = async (job) => {
+    try {
+        const response = await fetch(`http://localhost:3000/reports/jira/openBug`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(job), // Send the whole job object
+        });
+
+        if (response.ok) {
+            const data = await response.json();
+            alert(`Jira issue created successfully with ID: ${data.issueKey}`);
+        } else {
+            alert('Failed to create Jira issue');
+        }
+    } catch (error) {
+        console.error('Error:', error);
+        alert('An error occurred while creating the Jira issue.');
+    }
 };
 
 const sendReportToUser = (user) => {

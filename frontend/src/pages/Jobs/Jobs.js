@@ -6,7 +6,6 @@ import EditJobForm from './EditJobForm';
 import DeleteJobForm from './DeleteJobForm';
 import pauseIcon from './pause.png'; // Adjust the relative path as needed
 import resumeIcon from './play-buttton.png';
-import { Preview } from '@mui/icons-material';
 
 
 const fetchWaitingJobsData = async () => {
@@ -97,8 +96,6 @@ const Jobs = () => {
     const [clusters, setClusters] = useState([]);
 
 
-
-
     // Fetch data when the component mounts
     useEffect(() => {
         const fetchData = async () => {
@@ -122,6 +119,37 @@ const Jobs = () => {
         fetchData();
     }, []);
 
+    const moveJobToWaiting = useCallback(async (jobId) => {
+        try {
+            const jobData = await fetch(`http://localhost:3000/jobs/completedJobs/getJobById/${jobId}`); 
+            const job = await jobData.json();
+            console.log("Moving this job from completed to waiting: ", job);
+
+            // API to insert the job into WaitingJobs
+            await fetch(`http://localhost:3000/jobs/waitingJobs/addSameJob`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(job), // assuming jobId is enough to insert it
+            });
+            console.log(`Job ${jobId} moved from CompletedJobs to WaitingJobs`);
+            
+            // API to delete the job from CompletedJobs
+            await fetch(`http://localhost:3000/jobs/completedJobs/deleteJobById/${jobId}`, { 
+                method: 'DELETE',
+            });
+            console.log(`Job ${jobId} deleted from CompletedJobs`);
+
+            // readyJobsQueue.current.push(job);
+            // setTrigger(prev => prev + 1); // Trigger re-render to process the new job
+
+            handleJobDeleted(); // Update the jobs lists
+        
+        } catch (error) {
+            console.error(`Error moving job ${jobId} to WaitingJobs:`, error);
+
+        }
+    }, []); // No dependencies, so it will be memoized once and remain stable
+    
     // Memoize moveJobToReady using useCallback
     const moveJobToReady = useCallback(async (jobId) => {
         try {
@@ -626,7 +654,13 @@ const Jobs = () => {
                     await saveDuration(job.jobId, formattedDuration);
                     console.log(`Final duration for job ${job.jobId}: ${finalDuration} seconds`);
                     await freeTheCluster(job);
-                    moveJobToCompleted(job.jobId);
+
+                    await moveJobToCompleted(job.jobId);
+                    if (job.jobRunType === "Scheduled" && job.scheduleType === "Reoccurring Job") {
+                        console.log(`Job ${job.jobId} is reoccurring, moving it back to WaitingJobs.`);
+                        await moveJobToWaiting(job.jobId);
+                    }
+        
                     setTrigger(prev => prev + 1); // Trigger re-render to process the new job
                     console.log(`LOL`);
                 }
@@ -736,6 +770,10 @@ const Jobs = () => {
                     <td className={job.testStatus === "Succeeded" ? "test-status-succeeded" : job.testStatus === "Failed" ? "test-status-failed" : ""}>
                         {job.testStatus}
                     </td>
+                )}
+
+                {job.status === "Completed" && (
+                    <td>{job.failureReason}</td>
                 )}
             </tr>
         );
@@ -874,6 +912,7 @@ const Jobs = () => {
                             <th>Completed Date</th>
                             <th>Completed Time</th>
                             <th>Test Status</th>
+                            <th>Failure Reason</th>
                         </tr>
                     </thead>
                     <tbody>

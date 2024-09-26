@@ -26,6 +26,9 @@ exports.getJobById = async (req, res) => {
     }
 };
 
+
+            
+
 exports.addCompletedJob = async (req, res) => {
     try {
         const {
@@ -47,21 +50,22 @@ exports.addCompletedJob = async (req, res) => {
             runningCluster
         } = req.body;
 
+        // Simulated array of possible failure reasons
+        const failureReasons = [
+            'Network Timeout',
+            'Server Error',
+            'Resource Allocation Failure',
+            'Test Environment Misconfiguration',
+            'Unknown Error',
+            'Database Connection Lost',
+            'Insufficient Memory',
+        ];
+
         const result = Math.random() < 0.7 ? 'Succeeded' : 'Failed';
         // Get the current date and time in Jerusalem timezone
         const nowInJerusalem = moment().tz('Asia/Jerusalem');
         const completedDate = nowInJerusalem.format('YYYY-MM-DD');
         const completedTime = nowInJerusalem.format('HH:mm:ss');
-
-        // // Fetch all clusters in this pool by their IDs
-        // const clusterIds = resourcePool.clusters.map(clusterId => new mongoose.Types.ObjectId(clusterId));
-        // console.log('clusterIds:', clusterIds);
-        // const clusters = await Cluster.find({ _id: { $in: clusterIds } });
-        // console.log('clusters:', clusters);
-
-        // // Find the running cluster within the resource pool's clusters array
-        // const runnedOnCluster = clusters.find(cluster => cluster._id.equals(runningCluster)).clusterName;
-        // console.log('runnedOnCluster:', runnedOnCluster);
 
         // Find the cluster from the Cluster collection using runningCluster._id
         const cluster = await Cluster.findById(runningCluster);
@@ -72,6 +76,9 @@ exports.addCompletedJob = async (req, res) => {
 
         const runnedOnCluster = cluster.clusterName;
         console.log('runnedOnCluster32:', runnedOnCluster);
+
+        // Determine the generatedFailureReason reason based on test status
+        const generatedFailureReason = result === 'Succeeded' ? '-' : failureReasons[Math.floor(Math.random() * failureReasons.length)];
 
         // Create a new CompletedJob object
         const newJob = new CompletedJob({
@@ -93,8 +100,8 @@ exports.addCompletedJob = async (req, res) => {
             testStatus: result,
             completedDate,
             completedTime,
-            // runningCluster
-            runnedOnCluster
+            runnedOnCluster,
+            failureReason: generatedFailureReason // Assign the failure reason or '-' based on the result
         });
 
         // Save the new CompletedJob object
@@ -113,4 +120,27 @@ exports.addCompletedJob = async (req, res) => {
     }
 };
 
+exports.deleteJobById = async (req, res) => {
+    try {
+        const jobId = req.params.jobId;
 
+        // Use findOneAndDelete to search by the jobId field and delete the document
+        const deletedJob = await CompletedJob.findOneAndDelete({ jobId });
+        console.log('deletedJob:', deletedJob);
+
+        if (deletedJob) {
+            res.status(200).json({
+                message: 'Job deleted successfully',
+                job: deletedJob
+            });
+        } else {
+            res.status(404).json({ message: 'Job not found' });
+        }
+    } catch (error) {
+        console.error('Error deleting job:', error);
+        res.status(500).json({
+            message: 'Error deleting job',
+            error: error.message
+        });
+    }
+};

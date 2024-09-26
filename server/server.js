@@ -6,6 +6,7 @@ var bodyParser = require('body-parser');
 var multer = require('multer');
 var upload = multer();
 
+require('dotenv').config();
 
 app.use((req, res, next) => {  //CORS
     res.header('Access-Control-Allow-Origin', '*'); // Allow all origins
@@ -55,6 +56,10 @@ app.use('/jobs/waitingJobs', waitingJobsRoutes);
 app.use('/jobs/readyJobs', readyJobsRoutes);
 app.use('/jobs/runningJobs', runningJobsRoutes);
 app.use('/jobs/completedJobs', completedJobsRoutes);
+
+
+const reportsRoutes = require('./routes/reportsRoute/jiraReportsRoute');
+app.use('/reports', reportsRoutes);
 
 // Start the server
 app.listen(PORT, () => {

@@ -1,16 +1,20 @@
 /* General container styles */
 .reports-container {
     width: 100%;
+    max-width: 1200px; /* Set a maximum width */
+    margin: 0 auto; /* Center the container */
     text-align: center;
     padding: 20px;
     display: flex;
-    flex-direction: column;        /* Ensure vertical stacking for the title and chart */
+    flex-direction: column;
     align-items: center;
     background-color: #f0f4f8;
     border-radius: 10px;
     box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
     font-family: Arial, sans-serif;
+    overflow-x: hidden; /* Hide horizontal scrollbar */
 }
+
 
 /* Header styles */
 .reports-container h1,
@@ -106,3 +110,4 @@ button:hover {
     width: 100%;               /* Full width of the container */
     position: relative;        /* For positioning purposes */
 }
+

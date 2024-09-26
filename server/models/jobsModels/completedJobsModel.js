@@ -24,7 +24,8 @@ const completedJobSchema = new mongoose.Schema({
     completedDate: { type: String, required: true },
     completedTime: { type: String, required: true },
     // runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
-    runnedOnCluster: { type: String, required: true }
+    runnedOnCluster: { type: String, required: true },
+    failureReason: { type: String }
 });
 
 const CompletedJob = mongoose.model('CompletedJob', completedJobSchema);
