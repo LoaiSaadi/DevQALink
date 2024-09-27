@@ -15,7 +15,6 @@
     overflow-x: hidden; /* Hide horizontal scrollbar */
 }
 
-
 /* Header styles */
 .reports-container h1,
 .reports-container h2 {
@@ -33,16 +32,16 @@
 /* Flex container for the cards */
 .reports-container .cards-container {
     display: flex;
-    justify-content: center;       /* Center the cards */
-    flex-wrap: wrap;               /* Allow cards to wrap onto the next line if needed */
-    gap: 20px;                     /* Add spacing between the cards */
-    width: 100%;                   /* Make sure the container uses full width */
-    margin-top: 20px;              /* Add spacing above the cards */
+    justify-content: center; /* Center the cards */
+    flex-wrap: wrap; /* Allow cards to wrap onto the next line if needed */
+    gap: 20px; /* Add spacing between the cards */
+    width: 100%; /* Make sure the container uses full width */
+    margin-top: 20px; /* Add spacing above the cards */
 }
 
 /* Card styling */
 .report-card {
-    width: 300px;                  /* Set a fixed width for each card */
+    width: 300px; /* Set a fixed width for each card */
     padding: 20px;
     background-color: white;
     border-radius: 10px;
@@ -73,6 +72,7 @@
     font-size: 1.1em;
 }
 
+/* Button styles */
 button {
     margin-top: 10px;
     padding: 10px 15px;
@@ -92,22 +92,31 @@ button:hover {
     width: 120px;
     height: 40px;
     font-size: 16px;
-    margin-right: 10px;  /* Add space to the right of the first button */
+    margin-right: 10px; /* Space to the right of the first button */
 }
 
 .send-report-btn {
     width: 150px;
     height: 40px;
     font-size: 16px;
-    margin-left: 10px;  /* Add space to the right of the first button */
-
+    margin-left: 10px; /* Space to the left of the second button */
 }
 
 .separator {
-    height: 2px;               /* Thickness of the line */
-    background-color: #ccc;    /* Line color */
-    margin: 20px 0;           /* Space above and below the line */
-    width: 100%;               /* Full width of the container */
-    position: relative;        /* For positioning purposes */
+    height: 2px; /* Thickness of the line */
+    background-color: #ccc; /* Line color */
+    margin: 20px 0; /* Space above and below the line */
+    width: 100%; /* Full width of the container */
+    position: relative; /* For positioning purposes */
 }
 
+/* Add styles for disabled button state */
+button:disabled {
+    background-color: #ffffff; /* Greyed out background */
+    color: #666; /* Greyed out text */
+    cursor: not-allowed; /* Change cursor to indicate disabled state */
+}
+
+button:disabled:hover {
+    background-color: #ffffff; /* Prevent hover effect */
+}

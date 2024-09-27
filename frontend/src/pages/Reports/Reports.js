@@ -3,12 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
 
-
-
 // Simulated array of users
 const users = ['User 1', 'User 2', 'User 3', 'User 4', 'User 5'];
-
-
 
 // Function to randomly pick a user from the array
 const getRandomUser = () => {
@@ -33,6 +29,7 @@ const fetchCompletedJobsData = async () => {
 const Reports = () => {
     const [completedJobs, setCompletedJobs] = useState([]);
     const [successfulJobsByPool, setSuccessfulJobsByPool] = useState([]);
+    const [openedBugs, setOpenedBugs] = useState({}); // State to track opened bugs
 
     // Fetch data when the component mounts
     useEffect(() => {
@@ -53,8 +50,7 @@ const Reports = () => {
                         if (successfulJobsCount[poolName]) {
                             if (successfulJobsCount[poolName][clusterName]) {
                                 successfulJobsCount[poolName][clusterName]++;
-                            }
-                            else {
+                            } else {
                                 successfulJobsCount[poolName] = { ...successfulJobsCount[poolName], [clusterName]: 1 };
                             }
                         } else {
@@ -63,7 +59,6 @@ const Reports = () => {
                     }
                 });
 
-                console.log("successfulJobsCount: ", successfulJobsCount);
                 setSuccessfulJobsByPool(successfulJobsCount);
             } catch (error) {
                 console.error('Error fetching data:', error);
@@ -85,7 +80,7 @@ const Reports = () => {
             })
         };
     });
-    console.log("series: ", series);
+
     const labels = Object.keys(successfulJobsByPool);
 
     // Summing up the values for PieChart data (SSD, HDD, SSHD)
@@ -102,7 +97,37 @@ const Reports = () => {
         ...item,
         value: ((item.value / totalValue) * 100).toFixed(2) // Update value to be the percentage
     }));
-    console.log("formattedData: ", formattedData);
+
+    // Update openBug to accept the job object
+    const openBug = async (job) => {
+        try {
+            const response = await fetch(`http://localhost:3000/reports/jira/openBug`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(job), // Send the whole job object
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+                alert(`Jira issue created successfully with ID: ${data.issueKey}`);
+
+                // Mark the bug as opened for this job
+                setOpenedBugs((prev) => ({ ...prev, [job.jobId]: true }));
+            } else {
+                alert('Failed to create Jira issue');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while creating the Jira issue.');
+        }
+    };
+
+    const sendReportToUser = (user) => {
+        alert(`Sending report to ${user}`);
+        // Implement logic to send report to the user
+    };
 
     return (
         <div className="reports-container">
@@ -112,15 +137,14 @@ const Reports = () => {
 
             <div className="separator" />
             
-
             <h2>Pools Usage</h2>
             <p style={{ fontSize: '1.2em' }}>Successful jobs distributed across resource pools and clusters.</p>
 
             <BarChart
                 series={series}  // Dynamically generated series
-                height={400}
+                height={450}
                 xAxis={[{ data: labels, scaleType: 'band' }]}  // Pool names (HDD, SSD, SSHD)
-                margin={{ top: 10, bottom: 30, left: 40, right: 10 }}
+                margin={{ top: 70, bottom: 30, left: 40, right: 10 }}
             />
 
             <div className="separator" />
@@ -142,11 +166,10 @@ const Reports = () => {
             <div className="cards-container">
                 {completedJobs.map((job, index) => (
                     <div key={index} className="report-card">
-                        <h3>Job .{job.jobId} Report</h3>
+                        <h3>Job {job.jobId} Report</h3>
                         <p><strong>Job: </strong> {job.jobName}</p>
                         <p><strong>Version-Build: </strong> {job.buildVersion}</p>
                         <p><strong>Cluster Details: </strong> {job.runnedOnCluster}</p>
-
                         <p><strong>Test Result: </strong>
                             <span className={`status ${job.testStatus}`} style={{ color: job.testStatus === 'Succeeded' ? 'green' : 'red' }}>
                                 {job.testStatus}
@@ -157,7 +180,14 @@ const Reports = () => {
                         <p><strong>Date: </strong> {job.completedDate}</p>
                         <p><strong>Triggered By: </strong> {getRandomUser()}</p>
 
-                        <button className="open-bug-btn" onClick={() => openBug(job)}>Open Bug</button>
+                        <button 
+                            className="open-bug-btn" 
+                            onClick={() => openBug(job)} 
+                            disabled={openedBugs[job.jobId] || false}
+                        >
+                            {openedBugs[job.jobId] ? 'Bug Opened' : 'Open Bug'}
+                        </button>
+
                         <button className="send-report-btn" onClick={() => sendReportToUser(getRandomUser())}>Send Report</button>
                     </div>
                 ))}
@@ -168,34 +198,6 @@ const Reports = () => {
             </footer>
         </div>
     );
-};
-
-// Update openBug to accept the job object
-const openBug = async (job) => {
-    try {
-        const response = await fetch(`http://localhost:3000/reports/jira/openBug`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify(job), // Send the whole job object
-        });
-
-        if (response.ok) {
-            const data = await response.json();
-            alert(`Jira issue created successfully with ID: ${data.issueKey}`);
-        } else {
-            alert('Failed to create Jira issue');
-        }
-    } catch (error) {
-        console.error('Error:', error);
-        alert('An error occurred while creating the Jira issue.');
-    }
-};
-
-const sendReportToUser = (user) => {
-    alert(`Sending report to ${user}`);
-    // Implement logic to send report to the user
 };
 
 export default Reports;

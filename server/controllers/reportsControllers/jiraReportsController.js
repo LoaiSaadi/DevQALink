@@ -17,13 +17,13 @@ exports.openJiraBug = async (req, res) => {
             Test: ${job.jobName}
             Version-Build: ${job.buildVersion}
             Cluster details: ${job.runnedOnCluster}
-            Test result: ${job.testResult ? 'Pass' : 'Fail'}
-            Failure reason: ${job.testResult ? 'N/A' : job.failureReason}
+            Test result: ${job.testStatus}
+            Failure reason: ${job.testStatus === "Succeeded" ? '-' : job.failureReason}
             Runtime duration: ${job.duration}
-            Date: ${new Date(job.completedDate).toLocaleString()} // Format as needed
+            Date: ${new Date(job.completedDate).toLocaleString()}
         `,
         projectKey: JIRA_PROJECT_KEY,
-        issueType: 'Bug',
+        issueType: 'Task',
     };
 
     console.log('Opening Jira bug with details:', jobDetails);
@@ -52,6 +52,8 @@ exports.openJiraBug = async (req, res) => {
             },
             body: JSON.stringify(payload),
         });
+
+        console.log('Jira issue creation response:', response);
 
         if (response.ok) {
             const data = await response.json();

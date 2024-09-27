@@ -91,8 +91,14 @@
     border-radius: 6px;
     cursor: pointer;
     font-size: 16px;
-    transition: background-color 0.3s;
+
+    font-weight: bold;
+    color: #fff;
+    transition: background-color 0.3s, transform 0.2s;
+    margin: 0 10px; /* Space between buttons */
 }
+
+
 
 .submit-btn {
     background-color: #007bff; /* Blue color */
@@ -103,16 +109,6 @@
     background-color: #0056b3; /* Darker blue on hover */
 }
 
-.cancel-btn {
-    padding: 10px 20px; /* Match padding with submit-btn */
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s;
-    background: #f44336; /* Red color */
-    color: #fff;
-}
 
 .cancel-btn:hover {
     background: #e53935; /* Darker red on hover */
