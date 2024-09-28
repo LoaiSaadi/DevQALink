@@ -82,6 +82,7 @@ const Management = () => {
     const [isDeletePoolFormOpen, setIsDeletePoolFormOpen] = useState(false);
     const [poolToDelete, setPoolToDelete] = useState(null); 
 
+
     useEffect(() => {
         const fetchData = async () => {
             try {

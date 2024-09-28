@@ -1,5 +1,4 @@
 const ReadyJob = require('../../models/jobsModels/readyJobsModel');
-const JobIds = require('../../models/jobsModels/jobIdsModel');
 const moment = require('moment-timezone');
 
 const jobIds = [];
@@ -7,7 +6,7 @@ const jobIds = [];
 // Handle POST request to add a new ready job
 exports.addReadyJob = async (req, res) => {
     try {
-        const {jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob } = req.body;
+        const {jobId, jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, createdDate, createdTime, scheduleTime, priorityLevel, activationStatus, estimatedTime, resumeJob, triggeredBy } = req.body;
 
         // Check if the jobId already exists in the global array
         if (jobIds.includes(jobId)) {
@@ -52,7 +51,8 @@ exports.addReadyJob = async (req, res) => {
             activationStatus,
             jobStatus: 'Ready',
             resumeJob,
-            runningCluster: null
+            runningCluster: null,
+            triggeredBy
         });
         
         const savedJob = await newJob.save();
@@ -122,25 +122,9 @@ exports.updateJobById = async (req, res) => {
             createdTime,
             estimatedTime,
             activationStatus,
-            resumeJob
+            resumeJob,
+            triggeredBy
         } = req.body;
-
-        console.log("req body is: ", req.body); // Log entire request body
-        console.log("jobId: ", jobId);
-        console.log("jobName: ", jobName);
-        console.log("testToRun: ", testToRun);
-        console.log("resourcePool: ", resourcePool);
-        console.log("buildVersion: ", buildVersion);
-        console.log("jobRunType: ", jobRunType);
-        console.log("scheduleType: ", scheduleType);
-        console.log("scheduleTime: ", scheduleTime);
-        console.log("priorityLevel: ", priorityLevel);
-        console.log("createdDate: ", createdDate);
-        console.log("createdTime: ", createdTime);
-        console.log("estimatedTime: ", estimatedTime);
-        console.log("activationStatus: ", activationStatus);
-        console.log("resumeJob: ", resumeJob);
-
 
         // Create an object for fields that should be updated
         const updateFields = {};
@@ -161,6 +145,7 @@ exports.updateJobById = async (req, res) => {
         if (estimatedTime !== undefined) updateFields.estimatedTime = estimatedTime;
         if (activationStatus !== undefined) updateFields.activationStatus = activationStatus
         if (resumeJob !== undefined) updateFields.resumeJob = resumeJob;
+        if (triggeredBy !== undefined) updateFields.triggeredBy = triggeredBy;
 
         // Update the created date and time for tracking purposes
         // const nowInJerusalem = moment().tz('Asia/Jerusalem');

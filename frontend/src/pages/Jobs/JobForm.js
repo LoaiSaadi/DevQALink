@@ -24,6 +24,16 @@ const JobForm = ({ closeForm, onJobAdded }) => {
 
     const formRef = useRef(null);
 
+    const [username, setUsername] = useState('');
+
+    useEffect(() => {
+        // Retrieve the username from local storage
+        const storedUsername = localStorage.getItem('username');
+        if (storedUsername) {
+            setUsername(storedUsername);
+        }
+    }, []);
+
     // Fetch pool names from the database
     const fetchPoolNames = async () => {
         try {
@@ -110,7 +120,7 @@ const JobForm = ({ closeForm, onJobAdded }) => {
             alert('Please select a valid estimated time. Estimated hours and minutes cannot both be zero.');
             return; // Exit the function without submitting the form
         }
-
+        
         // const estimatedTime = `${formData.estimatedHours}h ${formData.estimatedMinutes}m`;
 
         // Pad hours and minutes with leading zeros to ensure they are always two digits
@@ -137,6 +147,7 @@ const JobForm = ({ closeForm, onJobAdded }) => {
             estimatedTime,
             scheduleType: formData.jobRunType === 'Immediately' ? '-' : validScheduleType, // Updated line
             scheduleTime,
+            triggeredBy: username
         };
 
         try {

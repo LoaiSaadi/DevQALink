@@ -5,7 +5,7 @@ const moment = require('moment-timezone');
 // Handle POST request to add a new waiting job
 exports.addWaitingJob = async (req, res) => {
     try {
-        const { jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedTime } = req.body;
+        const { jobName, testToRun, resourcePool, buildVersion, jobRunType, scheduleType, scheduleTime, priorityLevel, estimatedTime, triggeredBy } = req.body;
 
         // Check if testToRun is provided and not empty
         if (!testToRun || testToRun.length === 0) {
@@ -34,7 +34,8 @@ exports.addWaitingJob = async (req, res) => {
             estimatedTime,
             createdDate,
             createdTime,
-            resumeJob: "Resume"
+            resumeJob: "Resume",
+            triggeredBy
         });
 
         const savedJob = await newJob.save();
@@ -69,6 +70,7 @@ exports.addSameJob = async (req, res) => {
             createdTime,
             estimatedTime,
             activationStatus,
+            triggeredBy
         } = req.body;
 
         const newJob = new WaitingJob({
@@ -86,7 +88,8 @@ exports.addSameJob = async (req, res) => {
             status: "Waiting",
             estimatedTime,
             activationStatus,
-            resumeJob : "Resume"
+            resumeJob : "Resume",
+            triggeredBy
         });
         
         const savedJob = await newJob.save();
@@ -147,7 +150,8 @@ exports.updateJobById = async (req, res) => {
             createdTime,
             estimatedTime,
             activationStatus,
-            resumeJob
+            resumeJob,
+            triggeredBy
         } = req.body;
 
         // Create an object for fields that should be updated
@@ -169,6 +173,7 @@ exports.updateJobById = async (req, res) => {
         if (estimatedTime !== undefined) updateFields.estimatedTime = estimatedTime;
         if (activationStatus !== undefined) updateFields.activationStatus = activationStatus
         if (resumeJob !== undefined) updateFields.resumeJob = resumeJob;
+        if (triggeredBy !== undefined) updateFields.triggeredBy = triggeredBy;
 
         // Use findOneAndUpdate to search by the jobId field and update the document
         const updatedJobDoc = await WaitingJob.findOneAndUpdate({ jobId }, updateFields, { new: true });

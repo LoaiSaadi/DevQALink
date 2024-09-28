@@ -1,16 +1,10 @@
+
+
+
 import './Reports.css'; // Assuming you will add styles in an external CSS file
 import React, { useState, useEffect } from 'react';
 import { BarChart } from '@mui/x-charts/BarChart';
 import { PieChart } from '@mui/x-charts/PieChart';
-
-// Simulated array of users
-const users = ['User 1', 'User 2', 'User 3', 'User 4', 'User 5'];
-
-// Function to randomly pick a user from the array
-const getRandomUser = () => {
-    const randomIndex = Math.floor(Math.random() * users.length);
-    return users[randomIndex];
-};
 
 const fetchCompletedJobsData = async () => {
     try {
@@ -29,7 +23,9 @@ const fetchCompletedJobsData = async () => {
 const Reports = () => {
     const [completedJobs, setCompletedJobs] = useState([]);
     const [successfulJobsByPool, setSuccessfulJobsByPool] = useState([]);
+    const [successfulJobsByUser, setSuccessfulJobsByUser] = useState({}); // New state for user distribution
     const [openedBugs, setOpenedBugs] = useState({}); // State to track opened bugs
+    const [sentReports, setSentReports] = useState({}); // State to track sent reports
 
     // Fetch data when the component mounts
     useEffect(() => {
@@ -40,6 +36,7 @@ const Reports = () => {
 
                 // Count successful jobs
                 const successfulJobsCount = {};
+                const successfulJobsPerUser = {};
 
                 completedJobsData.forEach((job) => {
                     if (job.testStatus === 'Succeeded') {
@@ -56,10 +53,22 @@ const Reports = () => {
                         } else {
                             successfulJobsCount[poolName] = { [clusterName]: 1 };
                         }
+
+                        // Count successful jobs by user
+                        const userName = job.triggeredBy; // Use the triggeredBy field to get the user name
+                        if (successfulJobsPerUser[userName]) {
+                            successfulJobsPerUser[userName]++;
+                        } else {
+                            successfulJobsPerUser[userName] = 1; // Initialize the count for this user
+                        }
                     }
                 });
 
+                console.log('Successful jobs by pool:', successfulJobsCount);
+                console.log('Successful jobs by user:', successfulJobsPerUser);
                 setSuccessfulJobsByPool(successfulJobsCount);
+                setSuccessfulJobsByUser(successfulJobsPerUser); // Set the successful jobs count per user
+
             } catch (error) {
                 console.error('Error fetching data:', error);
             }
@@ -84,18 +93,16 @@ const Reports = () => {
     const labels = Object.keys(successfulJobsByPool);
 
     // Summing up the values for PieChart data (SSD, HDD, SSHD)
-    const pieChartData = Object.keys(successfulJobsByPool).map((poolName) => {
+    const pieChartPoolData = Object.keys(successfulJobsByPool).map((poolName) => {
         const totalCount = Object.values(successfulJobsByPool[poolName]).reduce((acc, val) => acc + val, 0);
         return { id: poolName, value: totalCount, label: poolName };
     });
 
-    // Calculate total value
-    const totalValue = pieChartData.reduce((acc, item) => acc + item.value, 0);
-
-    // Prepare data for the PieChart with calculated percentages as values
-    const formattedData = pieChartData.map(item => ({
-        ...item,
-        value: ((item.value / totalValue) * 100).toFixed(2) // Update value to be the percentage
+    // Create the series data for User Distribution PieChart
+    const pieChartUserData = Object.keys(successfulJobsByUser).map(userName => ({
+        id: userName,
+        value: successfulJobsByUser[userName],
+        label: userName
     }));
 
     // Update openBug to accept the job object
@@ -124,41 +131,76 @@ const Reports = () => {
         }
     };
 
-    const sendReportToUser = (user) => {
-        alert(`Sending report to ${user}`);
-        // Implement logic to send report to the user
+    const sendReportToUser = async (job) => {
+        try {
+            const response = await fetch(`http://localhost:3000/reports/sendReport`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ job })  // Pass job object
+            });
+
+            if (response.ok) {
+                alert(`Report sent successfully to ${job.triggeredBy}`);
+
+                // Mark the report as sent for this job
+                setSentReports((prev) => ({ ...prev, [job.jobId]: true }));
+            } else {
+                alert('Failed to send the report');
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while sending the report.');
+        }
     };
 
     return (
         <div className="reports-container">
             <h1>Reports</h1>
-            
+
             <p style={{ fontSize: '1.2em' }}>Overview of resource pool usage and job performance.</p>
 
             <div className="separator" />
-            
+
             <h2>Pools Usage</h2>
-            <p style={{ fontSize: '1.2em' }}>Successful jobs distributed across resource pools and clusters.</p>
+            <p style={{ fontSize: '1.2em' }}>Successful jobs distributed across resource pools and clusters</p>
 
             <BarChart
-                series={series}  // Dynamically generated series
+                series={series} 
                 height={450}
-                xAxis={[{ data: labels, scaleType: 'band' }]}  // Pool names (HDD, SSD, SSHD)
+                xAxis={[{ data: labels, scaleType: 'band' }]} 
                 margin={{ top: 70, bottom: 30, left: 40, right: 10 }}
             />
 
             <div className="separator" />
 
-            <h2>Pool Distribution</h2>
-            <p style={{ fontSize: '1.2em' }}>Summary of successful jobs per resource pool.</p>
-            <PieChart
-                series={[{
-                    data: formattedData,
-                }]}
-                width={400}
-                height={200}
-            />
-            
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+                <div style={{ flex: 1, marginRight: '80px' }}>
+                    <h2>Pools Distribution</h2>
+                    <p style={{ fontSize: '1.2em' }}>Successful jobs by resource pool</p>
+                    <PieChart
+                        series={[{
+                            data: pieChartPoolData,
+                        }]}
+                        width={400}
+                        height={200}
+                    />
+                </div>
+
+                <div style={{ flex: 1, marginLeft: '80px' }}>
+                    <h2>Users Distribution</h2>
+                    <p style={{ fontSize: '1.2em' }}>Successful jobs per user</p>
+                    <PieChart
+                        series={[{
+                            data: pieChartUserData,
+                        }]}
+                        width={400}
+                        height={200}
+                    />
+                </div>
+            </div>
+
             <div className="separator" />
 
             <h2>Jobs Reports</h2>
@@ -178,7 +220,7 @@ const Reports = () => {
                         <p><strong>Failure Reason: </strong>{job.failureReason}</p>
                         <p><strong>Runtime Duration: </strong> {job.duration}</p>
                         <p><strong>Date: </strong> {job.completedDate}</p>
-                        <p><strong>Triggered By: </strong> {getRandomUser()}</p>
+                        <p><strong>Triggered By: </strong> {job.triggeredBy}</p>
 
                         <button 
                             className="open-bug-btn" 
@@ -188,14 +230,16 @@ const Reports = () => {
                             {openedBugs[job.jobId] ? 'Bug Opened' : 'Open Bug'}
                         </button>
 
-                        <button className="send-report-btn" onClick={() => sendReportToUser(getRandomUser())}>Send Report</button>
+                        <button 
+                            className="send-report-btn" 
+                            onClick={() => sendReportToUser(job)} 
+                            disabled={sentReports[job.jobId] || false}  // Disable if report is already sent
+                        >
+                            {sentReports[job.jobId] ? 'Report Sent' : 'Send Report'}
+                        </button>
                     </div>
                 ))}
             </div>
-
-            <footer className="footer">
-                <p>© {new Date().getFullYear()} QA and Dev Scheduling Framework. All rights reserved.</p>
-            </footer>
         </div>
     );
 };

@@ -58,7 +58,7 @@ app.use('/jobs/runningJobs', runningJobsRoutes);
 app.use('/jobs/completedJobs', completedJobsRoutes);
 
 // Reports routes
-const reportsRoutes = require('./routes/reportsRoute/jiraReportsRoute');
+const reportsRoutes = require('./routes/reportsRoute/reportsRoute');
 app.use('/reports', reportsRoutes);
 
 // Auth routes

@@ -180,18 +180,40 @@ const Jobs = () => {
                 // await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
                 // console.log(`readyJobsQueue after sorting ${job.jobId} is :`, readyJobsQueue.current);
 
+
+
+                // // Check if the jobId already exists in the queue before pushing it
+                // const isDuplicate = readyJobsQueue.current.some(queuedJob => queuedJob.jobId === job.jobId);
+
+                // if (!isDuplicate) {
+                //     await readyJobsQueue.current.push(job);
+                //     console.log(`readyJobsQueue after pushing ${job.jobId} is:`, readyJobsQueue.current);
+                    
+                //     await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+                //     console.log(`readyJobsQueue after sorting ${job.jobId} is:`, readyJobsQueue.current);
+                // } else {
+                //     console.log(`Job ${job.jobId} is already in the queue, not adding it again.`);
+                // }
+
+
+
                 // Check if the jobId already exists in the queue before pushing it
                 const isDuplicate = readyJobsQueue.current.some(queuedJob => queuedJob.jobId === job.jobId);
 
                 if (!isDuplicate) {
-                    await readyJobsQueue.current.push(job);
+                    // Push the new job to the queue
+                    readyJobsQueue.current.push(job);
                     console.log(`readyJobsQueue after pushing ${job.jobId} is:`, readyJobsQueue.current);
-                    
-                    await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
-                    console.log(`readyJobsQueue after sorting ${job.jobId} is:`, readyJobsQueue.current);
+
+                    // Sort the queue by priorityLevel (highest priority first)
+                    readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+                    console.log(`readyJobsQueue after sorting ${job.jobId} by priority is:`, readyJobsQueue.current);
                 } else {
                     console.log(`Job ${job.jobId} is already in the queue, not adding it again.`);
                 }
+
+
+
 
                 setTrigger(prev => prev + 1); // Trigger re-render to process the new job
                 await sleep(1000);
@@ -329,8 +351,10 @@ const Jobs = () => {
                 }
                 else {
                     // throw new Error(`HTTP error! status: ${availableCluster.status}`);
-                    await console.log('Error finding available cluster.');
+                    console.log('Error finding available cluster.');
                 }
+
+                return result.success;
             }
             
         } catch (error) {
@@ -343,53 +367,86 @@ const Jobs = () => {
     const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 
-    // Effect to run jobs when readyJobsQueue array changes
+    // // Effect to run jobs when readyJobsQueue array changes
+    // useEffect(() => {
+    //     const processJobs = async () => {
+    //         if (readyJobsQueue.current.length === 0) return; // No jobs to process
+
+    //         // Sleep for 0.5 seconds (500 milliseconds) before starting the loop
+    //         // await sleep(1000);
+    //         // await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
+            
+
+    //         for (const job of readyJobsQueue.current) {
+    //             try {
+    //                 console.log(`Processing job ${job.jobId}...`);
+    //                 await moveJobToRunning(job.jobId); // Assuming this moves the job to running
+    //                 // moveJobToRunning(job.jobId); // Assuming this moves the job to running
+
+    //                 console.log(`Job ${job.jobId} has been moved to running.`);
+    //             } catch (error) {
+    //                 console.error(`Error processing job ${job.jobId}:`, error);
+    //             }
+    //         }
+
+    //         // Clear the readyJobsQueue array after processing all jobs
+    //         if (readyJobsQueue.current.length === 0) {
+    //             readyJobsQueue.current = [];
+    //         }
+    //         else{
+    //             processJobs();
+    //         }
+    //     };
+
+    //     console.log('Processing jobs from readyJobsQueue...');
+    //     console.log('readyJobsQueue:', readyJobsQueue.current);
+    //     processJobs();
+    // }, [trigger, moveJobToRunning]);  // Re-run the effect whenever trigger changes (new job added)
+
+
+
+  // Effect to run jobs when readyJobsQueue array changes
     useEffect(() => {
         const processJobs = async () => {
             if (readyJobsQueue.current.length === 0) return; // No jobs to process
 
-            // Sleep for 0.5 seconds (500 milliseconds) before starting the loop
-            // await sleep(1000);
-            // await readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
-            
+            // Sort jobs by priority level before processing
+            readyJobsQueue.current.sort((a, b) => b.priorityLevel - a.priorityLevel);
 
-            for (const job of readyJobsQueue.current) {
+            while (readyJobsQueue.current.length > 0) {
+                const job = readyJobsQueue.current[0]; // Always get the highest-priority job (sorted)
+
                 try {
                     console.log(`Processing job ${job.jobId}...`);
-                    await moveJobToRunning(job.jobId); // Assuming this moves the job to running
-                    // moveJobToRunning(job.jobId); // Assuming this moves the job to running
 
-                    console.log(`Job ${job.jobId} has been moved to running.`);
+                    // Move the job to running (this should also trigger a removal from the readyJobsQueue if successful)
+                    const res = await moveJobToRunning(job.jobId);
+
+                    if (res) {
+                        // After successfully moving to running, remove the job from the queue
+                        readyJobsQueue.current.shift(); // Remove the first (highest-priority) job from the queue
+                        console.log(`Job ${job.jobId} has been moved to running and removed from readyJobsQueue.`);
+                    } else {
+                        console.log(`Job ${job.jobId} couldn't be moved to running (no resources), retrying later.`);
+                    }
                 } catch (error) {
                     console.error(`Error processing job ${job.jobId}:`, error);
                 }
+
+                // Sleep briefly to avoid overwhelming the system (if needed)
+                await new Promise((resolve) => setTimeout(resolve, 500)); // 500ms delay between jobs
             }
 
-            // Clear the readyJobsQueue array after processing all jobs
-            if (readyJobsQueue.current.length === 0) {
-                readyJobsQueue.current = [];
-            }
-            else{
-                processJobs();
-            }
+            console.log('All jobs in readyJobsQueue have been processed.');
         };
 
         console.log('Processing jobs from readyJobsQueue...');
         console.log('readyJobsQueue:', readyJobsQueue.current);
-        processJobs();
+        processJobs(); // Start processing jobs when the effect runs
+
     }, [trigger, moveJobToRunning]);  // Re-run the effect whenever trigger changes (new job added)
 
 
-    // useEffect( () => {
-    //     const Go = async () => {
-    //         await sleep(1000);
-    //         console.log('readyJobsQueue:', readyJobsQueue.current);
-    //     };
-
-    //     // await sleep(1000);
-    //     // await fetchReadyJobsData();
-    //     Go();
-    // }, [readyJobs]);  // Re-run the effect whenever readyJobs changes (new job added)
 
 
     // Memoize moveJobToCompleted using useCallback
@@ -775,6 +832,8 @@ const Jobs = () => {
                 {job.status === "Completed" && (
                     <td>{job.failureReason}</td>
                 )}
+
+                <td>{job.triggeredBy}</td>
             </tr>
         );
     };
@@ -824,6 +883,7 @@ const Jobs = () => {
                             <th>Pause/ Resume</th>
                             <th>Edit</th>
                             <th>Delete</th>
+                            <th>Triggered By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -853,6 +913,7 @@ const Jobs = () => {
                             <th>Pause/ Resume</th>
                             <th>Edit</th>
                             <th>Delete</th>
+                            <th>Triggered By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -881,6 +942,7 @@ const Jobs = () => {
                             <th>Activation Status</th>
                             <th>Estimated Time</th>
                             <th>Duration</th>
+                            <th>Triggered By</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -913,6 +975,7 @@ const Jobs = () => {
                             <th>Completed Time</th>
                             <th>Test Status</th>
                             <th>Failure Reason</th>
+                            <th>Triggered By</th>
                         </tr>
                     </thead>
                     <tbody>

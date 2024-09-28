@@ -1,4 +1,3 @@
-/* src/pages/Auth/Auth.css */
 .auth-container {
     position: relative;
     height: 100vh;
@@ -25,10 +24,19 @@ h2 {
     margin-bottom: 15px;
 }
 
+/* Standard paragraph styling */
 p {
     font-size: 1.2rem;
     margin-bottom: 20px;
-    color: #ffffff; /* Error message color */
+}
+
+/* Specific styling for error messages */
+.error-message {
+    color: #ff4d4d; /* Red color for error */
+    font-weight: bold;
+    margin-bottom: 15px;
+    padding: 10px;
+    border-radius: 5px;
 }
 
 .input-group {

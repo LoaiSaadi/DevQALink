@@ -22,7 +22,12 @@ const Auth = () => {
 
             const data = await response.json();
             if (response.ok) {
-                navigate('/'); // Navigate back to home after login
+                alert(`Login successful to @${username}`);
+
+                // Save username to localStorage
+                localStorage.setItem('username', username);
+
+                navigate('/home'); // Pass it as state if using routing
             } else {
                 setError(data.message || 'Authentication failed');
             }

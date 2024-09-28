@@ -47,7 +47,8 @@ exports.addCompletedJob = async (req, res) => {
             activationStatus,
             resumeJob,
             duration,
-            runningCluster
+            runningCluster,
+            triggeredBy
         } = req.body;
 
         // Simulated array of possible failure reasons
@@ -101,7 +102,8 @@ exports.addCompletedJob = async (req, res) => {
             completedDate,
             completedTime,
             runnedOnCluster,
-            failureReason: generatedFailureReason // Assign the failure reason or '-' based on the result
+            failureReason: generatedFailureReason, // Assign the failure reason or '-' based on the result
+            triggeredBy
         });
 
         // Save the new CompletedJob object

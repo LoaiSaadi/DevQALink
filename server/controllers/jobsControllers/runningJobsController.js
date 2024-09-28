@@ -1,5 +1,4 @@
 const RunningJob = require('../../models/jobsModels/runningJobsModel');
-const JobIds = require('../../models/jobsModels/jobIdsModel');
 const moment = require('moment-timezone');
 
 const jobIds = [];
@@ -34,7 +33,8 @@ exports.addRunningJob = async (req, res) => {
             estimatedTime,
             activationStatus,
             resumeJob,
-            runningCluster
+            runningCluster,
+            triggeredBy
         } = req.body;
 
 
@@ -83,7 +83,8 @@ exports.addRunningJob = async (req, res) => {
             activationStatus,
             resumeJob,
             duration: '00:00:00',
-            runningCluster
+            runningCluster,
+            triggeredBy
         });
 
         // Save the new RunningJob object
@@ -187,7 +188,8 @@ exports.updateRunningJobById = async (req, res) => {
             createdTime,
             estimatedTime,
             activationStatus,
-            resumeJob
+            resumeJob,
+            triggeredBy
         } = req.body;
 
         const updatedJob = await RunningJob.findOneAndUpdate(
@@ -205,7 +207,8 @@ exports.updateRunningJobById = async (req, res) => {
                 createdTime,
                 estimatedTime,
                 activationStatus,
-                resumeJob
+                resumeJob,
+                triggeredBy
             },
             { new: true }
         );

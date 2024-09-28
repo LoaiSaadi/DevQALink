@@ -10,7 +10,11 @@ exports.login = async (req, res) => {
 
     try {
         // Find user by email or username
-        const user = await User.findOne({ email, username });
+        // const user = await User.findOne({ email, username });
+        const user = await User.findOne({
+            $or: [{ email: email }, { username: username }]
+        });
+        console.log('user:', user); 
         if (!user) {
             return res.status(400).json({ message: 'User not found' });
         }
@@ -29,3 +33,31 @@ exports.login = async (req, res) => {
     }
 };
 
+// Register route
+exports.register = async (req, res) => {
+    const { username, email, password } = req.body;
+
+    try {
+        // Check if the user already exists
+        const existingUser = await User.findOne({ email });
+        if (existingUser) {
+            return res.status(400).json({ message: 'Email already exists' });
+        }
+
+        // Hash the password before saving
+        const hashedPassword = await bcrypt.hash(password, 10);
+
+        // Create a new user
+        const newUser = new User({
+            username,
+            email,
+            password: hashedPassword,
+        });
+
+        await newUser.save();
+
+        res.status(201).json({ message: 'User registered successfully' });
+    } catch (err) {
+        res.status(500).json({ message: 'Server error, try again later' });
+    }
+};

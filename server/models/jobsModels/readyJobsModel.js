@@ -19,7 +19,8 @@ const readyJobSchema = new mongoose.Schema({
     status: { type: String, default: 'Ready' },
     activationStatus: { type: String, default: 'Activated' },
     resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true },
-    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
+    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'},
+    triggeredBy : { type: String, required: true },
 });
 
 const ReadyJob = mongoose.model('ReadyJob', readyJobSchema);

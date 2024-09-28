@@ -21,7 +21,8 @@ const runningJobSchema = new mongoose.Schema({
     activationStatus: { type: String, default: 'Activated' },
     resumeJob: { type: String, enum: ['Resume', 'Pause'], default: 'Resume', required: true },
     duration: { type: String, required: true },
-    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'}
+    runningCluster: { type: Schema.Types.ObjectId, ref: 'Cluster'},
+    triggeredBy : { type: String, required: true },
 });
 
 const RunningJob = mongoose.model('RunningJob', runningJobSchema);
