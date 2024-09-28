@@ -18,7 +18,7 @@ const TopTabs = () => {
     };
 
     const menuItems = [
-        { text: 'Home', icon: <HomeIcon />, link: '/' },
+        { text: 'Home', icon: <HomeIcon />, link: '/home' },
         { text: 'QA Tests', icon: <QaIcon />, link: '/qa' },
         { text: 'Dev Builds', icon: <BuildIcon />, link: '/builds' },
         { text: 'Resources', icon: <ManagementIcon />, link: '/resources' },

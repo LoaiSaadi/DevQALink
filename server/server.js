@@ -57,9 +57,13 @@ app.use('/jobs/readyJobs', readyJobsRoutes);
 app.use('/jobs/runningJobs', runningJobsRoutes);
 app.use('/jobs/completedJobs', completedJobsRoutes);
 
-
+// Reports routes
 const reportsRoutes = require('./routes/reportsRoute/jiraReportsRoute');
 app.use('/reports', reportsRoutes);
+
+// Auth routes
+const authRoutes = require('./routes/authRoutes/authRoute');
+app.use('/auth', authRoutes);
 
 // Start the server
 app.listen(PORT, () => {

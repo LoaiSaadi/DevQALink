@@ -1,0 +1,105 @@
+/* src/pages/Auth/Auth.css */
+.auth-container {
+    position: relative;
+    height: 100vh;
+    background: url('https://source.unsplash.com/featured/?technology') no-repeat center center/cover;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: #fff;
+}
+
+.overlay {
+    text-align: center;
+    background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+    padding: 40px;
+    border-radius: 10px;
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+    max-width: 400px; /* Match Landing overlay width */
+    width: 100%; /* Ensure it takes full width up to max-width */
+}
+
+h2 {
+    font-size: 2.5rem; /* Slightly smaller than h1 in Landing */
+    font-weight: bold;
+    margin-bottom: 15px;
+}
+
+p {
+    font-size: 1.2rem;
+    margin-bottom: 20px;
+    color: #ffffff; /* Error message color */
+}
+
+.input-group {
+    margin-bottom: 20px;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    padding: 10px;
+    border-radius: 5px;
+    border: 1px solid rgb(151, 151, 151);
+    width: 100%;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 1.2rem;
+}
+
+.input-group input:focus {
+    border-color: #0066a1; /* Focused input border color */
+    outline: none;
+}
+
+.button-container {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+.auth-button {
+    padding: 15px 30px;
+    font-size: 18px;
+    cursor: pointer;
+    border-radius: 25px;
+    font-weight: bold;
+    transition: transform 0.3s, background-color 0.3s, border 0.3s;
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Login Button */
+.auth-button.login {
+    background-color: #0066a1;
+    color: white;
+    border: 1px solid rgb(151, 151, 151);
+}
+
+.auth-button.login:hover {
+    transform: scale(1.1);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+/* Back Button with no background */
+.auth-button.back {
+    background-color: transparent;
+    color: white;
+    border: 1px solid rgb(151, 151, 151);
+}
+
+.auth-button.back:hover {
+    transform: scale(1.1);
+    background-color: rgba(255, 255, 255, 0.2); /* Add a subtle background on hover */
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+    to {
+        opacity: 1;
+    }
+}
