@@ -240,6 +240,10 @@ const Reports = () => {
                     </div>
                 ))}
             </div>
+            
+            <footer className="footer">
+                <p>© {new Date().getFullYear()} QA and Dev Scheduling Framework. All rights reserved.</p>
+            </footer>
         </div>
     );
 };

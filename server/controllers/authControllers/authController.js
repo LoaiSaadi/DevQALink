@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcrypt');  // For password hashing
 const User = require('../../models/authModels/authModel'); // Assuming you have a User model
 const router = express.Router();
+const jwt = require('jsonwebtoken');
 
 
 // Login route
@@ -26,7 +27,18 @@ exports.login = async (req, res) => {
         }
 
         // Authentication successful
-        res.json({ message: 'Login successful', user });
+        var token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '5s' });
+        // res.json({ message: 'Login successful', user });
+        res.json({
+            message: 'Login successful',
+            token: token,  // Send the JWT token
+            user: {
+                id: user._id,
+                email: user.email,
+                username: user.username
+                // Add any additional user data as needed
+            }
+        });
     } catch (error) {
         console.error('Error during login:', error);
         res.status(500).json({ message: 'Internal server error' });

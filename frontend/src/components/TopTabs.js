@@ -32,6 +32,7 @@ const TopTabs = () => {
         // Perform any logout logic here (like clearing tokens if necessary)
         alert(`Goodbye, @${username}`); // Show a goodbye message
         localStorage.removeItem('username'); // Remove username from localStorage on logout
+        localStorage.removeItem('token');
         navigate('/'); // Navigate to the landing page ("/")
     };
 

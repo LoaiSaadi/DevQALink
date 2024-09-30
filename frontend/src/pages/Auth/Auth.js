@@ -1,4 +1,3 @@
-// src/pages/Auth/Auth.js
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import './Auth.css'; // Import the CSS for styling
@@ -27,7 +26,12 @@ const Auth = () => {
                 // Save username to localStorage
                 localStorage.setItem('username', username);
 
-                navigate('/home'); // Pass it as state if using routing
+                // Check if the token is present in the response and store it
+                if (data.token) {
+                    localStorage.setItem('token', data.token); // Store the JWT token
+                }
+
+                navigate('/home'); // Navigate to home
             } else {
                 setError(data.message || 'Authentication failed');
             }
