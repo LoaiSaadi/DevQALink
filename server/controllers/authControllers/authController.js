@@ -27,7 +27,7 @@ exports.login = async (req, res) => {
         }
 
         // Authentication successful
-        var token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '5s' });
+        var token = jwt.sign({ userId: user._id }, 'your_jwt_secret', { expiresIn: '1h' });
         // res.json({ message: 'Login successful', user });
         res.json({
             message: 'Login successful',

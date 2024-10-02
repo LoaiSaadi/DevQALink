@@ -4,6 +4,8 @@ import './Qa.css'; // Add styling as needed
 import EditTestForm from './EditTestForm'; // Import EditTestForm for editing tests
 import TestForm from './TestForm'; // Import TestForm for adding new tests
 import DeleteTestForm from './DeleteTestForm'; // Import DeleteTestForm for deleting tests
+import { jwtDecode } from 'jwt-decode'; // Ensure jwt-decode is imported
+
 
 const fetchTestsData = async () => {
     try {
@@ -26,6 +28,79 @@ const Qa = () => {
     const [editingTest, setEditingTest] = useState(null);
     const [isDeleteFormOpen, setIsDeleteFormOpen] = useState(false); // State for delete form
     const [testToDelete, setTestToDelete] = useState(null); // State to store the test to delete
+
+    const [timeLeft, setTimeLeft] = useState(null);
+    const [sessionExpired, setSessionExpired] = useState(false); // Flag to track if session has expired
+
+    useEffect(() => {
+        const token = localStorage.getItem('token');
+
+        if (token) {
+            // Decode the JWT token to get its expiration time
+            const decoded = jwtDecode(token);
+            console.log('Current time:', new Date().toLocaleString('en-US', { timeZone: 'Asia/Jerusalem' })); // Display current time in Jerusalem time
+            
+            // Calculate the expiration time based on the decoded token
+            const expirationTime = new Date(decoded.exp * 1000); // Convert seconds to milliseconds
+            console.log('Token expiry time:', expirationTime.toString());
+
+            const timeUntilExpiry = (decoded.exp * 1000 - Date.now()) / 1000; // Remaining time in seconds
+            console.log('Time until expiry:', timeUntilExpiry);
+
+            if (timeUntilExpiry > 0) {
+                setTimeLeft(timeUntilExpiry); // Set the countdown timer
+
+                // Reset the timer whenever user interacts (mousemove, keydown, click, scroll)
+                const resetTimer = () => {
+                    setTimeLeft(timeUntilExpiry); // Reset timer to full expiration time
+                    setSessionExpired(false); // Reset session expired flag
+                };
+
+                // Add event listeners for activity
+                window.addEventListener('mousemove', resetTimer);
+                window.addEventListener('keydown', resetTimer);
+                window.addEventListener('click', resetTimer);
+                window.addEventListener('scroll', resetTimer);
+
+                // Start the countdown
+                const countdown = setInterval(() => {
+                    setTimeLeft((prevTime) => {
+                        console.log(`Time left: ${prevTime} seconds`); // Log time left
+                        if (prevTime <= 1) {
+                            clearInterval(countdown);
+                            handleTokenExpiry(); // Call token expiry only if not already expired
+                            return 0;
+                        }
+                        return prevTime - 1;
+                    });
+                }, 1000);
+
+                // Clean up the listeners when component unmounts
+                return () => {
+                    clearInterval(countdown);
+                    window.removeEventListener('mousemove', resetTimer);
+                    window.removeEventListener('keydown', resetTimer);
+                    window.removeEventListener('click', resetTimer);
+                    window.removeEventListener('scroll', resetTimer);
+                };
+            } else {
+                // Token already expired
+                handleTokenExpiry();
+            }
+        } else {
+            alert('No token found, redirecting to login.');
+            window.location.href = '/login'; // Redirect to login
+        }
+    }, []); // Run this effect only once when the component mounts
+
+    const handleTokenExpiry = () => {
+        if (!sessionExpired) {
+            setSessionExpired(true); // Set the flag to true to prevent multiple alerts
+            alert('Session expired due to inactivity. Please log in again.'); // Alert for session expiry
+            localStorage.removeItem('token'); // Remove token
+            window.location.href = '/login'; // Redirect to login
+        }
+    };
 
     useEffect(() => {
         const fetchData = async () => {
