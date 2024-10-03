@@ -108,6 +108,21 @@ const EditPoolForm = ({ pool = {}, closeForm, savePool }) => {
                         />
                     </div>
 
+                    <div className="form-row">
+                        <label htmlFor="poolStatus">Pool Status</label>
+                        <select
+                            id="poolStatus"
+                            name="poolStatus"
+                            value={formData.poolStatus}
+                            onChange={handleChange}
+                            required
+                        >
+                            <option value="Available">Available</option>
+                            <option value="Unavailable">Unavailable</option>
+                            <option disabled value="Running">Running</option>
+                        </select>
+                    </div>
+
                     <div className="btn-container">
                         <button type="submit" className="submit-btn">Save Changes</button>
                         <button type="button" className="cancel-btn" onClick={closeForm}>Cancel</button>
