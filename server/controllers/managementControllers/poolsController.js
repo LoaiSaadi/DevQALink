@@ -32,6 +32,7 @@ exports.addPool = async (req, res) => {
 
         // Fetch clusters to sum up serversNumber
         const clusterDetails = await Cluster.find({ _id: { $in: clusters } });
+        
         // Calculate total serversNumber by summing serversNumber of each cluster
         const newServersNumber = clusterDetails.reduce((total, cluster) => total + cluster.serversNumber, 0);
 

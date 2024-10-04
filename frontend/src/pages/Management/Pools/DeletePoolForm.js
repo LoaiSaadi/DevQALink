@@ -7,24 +7,30 @@ const DeletePoolForm = ({ pool, closeForm, deletePool }) => {
     // Function to handle the delete operation
     const handleDelete = async () => {
         try {
-            // Sending a DELETE request to the pool
-            const response = await fetch(`http://localhost:3000/management/pools/deletePoolById/${pool.poolId}`, {
-                method: 'DELETE',
-                headers: {
-                    'Content-Type': 'application/json'
+            if (pool.poolStatus === 'Available') {
+                // Sending a DELETE request to the pool
+                const response = await fetch(`http://localhost:3000/management/pools/deletePoolById/${pool.poolId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
                 }
-            });
 
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
+                const result = await response.json();
+                console.log(result.message); // Log the success message (optional)
+
+                // deletePool(pool.poolId); // Update the parent component's state by removing the pool
+                deletePool(pool); // Update the parent component's state by removing the pool
+                closeForm(); // Close the form after deletion
             }
-
-            const result = await response.json();
-            console.log(result.message); // Log the success message (optional)
-
-            // deletePool(pool.poolId); // Update the parent component's state by removing the pool
-            deletePool(pool); // Update the parent component's state by removing the pool
-            closeForm(); // Close the form after deletion
+            else {
+                alert('Please try again later. The pool is running or unavailable.');
+                return; // Exit the function without submitting the form
+            }
         } catch (error) {
             console.error('Error deleting pool:', error);
         }

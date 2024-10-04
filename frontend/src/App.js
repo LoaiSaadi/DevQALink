@@ -1,6 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
-import TopTabs from './NavigationBar/TopTabs';
+import TopTabs from './navigationBar/TopTabs';
 import Home from './pages/Home/Home';
 import Build from './pages/Build/Build';
 import Management from './pages/Management/Management';

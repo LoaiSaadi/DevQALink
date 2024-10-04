@@ -1,17 +1,26 @@
 /* src/pages/Landing/Landing.css */
 .landing-container {
-    position: relative;
-    height: 100vh;
-    background: url('https://source.unsplash.com/featured/?technology') no-repeat center center/cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    background: url('./Dell_W&B.jpg') no-repeat center center fixed;
+    background-size: cover;
+
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #fff;
+    color: #294870;
 }
 
 .overlay {
     text-align: center;
-    background: CCD3DC; /* Semi-transparent overlay */
+
+    background: transparent;
+    border: 2px solid rgb(151, 151, 151);
+    backdrop-filter: blur(50px);
+
     padding: 40px;
     border-radius: 10px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
@@ -61,7 +70,7 @@ p {
 /* Register Button with no background */
 .landing-button.register {
     background-color: transparent;
-    color: white;
+    color: #294870;
     border: 1px solid rgb(151, 151, 151);
 }
 

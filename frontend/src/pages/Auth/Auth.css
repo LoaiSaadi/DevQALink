@@ -1,16 +1,25 @@
 .auth-container {
-    position: relative;
-    height: 100vh;
-    background: url('https://source.unsplash.com/featured/?technology') no-repeat center center/cover;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100vw; /* Full viewport width */
+    height: 100vh; /* Full viewport height */
+    background: url('./Dell_W&B.jpg') no-repeat center center fixed;
+    background-size: cover;
+
     display: flex;
     justify-content: center;
     align-items: center;
-    color: #fff;
+    color: #294870;
 }
 
 .overlay {
     text-align: center;
-    background: rgba(0, 0, 0, 0.6); /* Semi-transparent overlay */
+
+    background: transparent;
+    border: 2px solid rgb(151, 151, 151);
+    backdrop-filter: blur(20px);
+    
     padding: 40px;
     border-radius: 10px;
     box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
@@ -80,7 +89,7 @@ p {
 
 /* Login Button */
 .auth-button.login {
-    background-color: #0066a1;
+    background-color: #2b2b2b;
     color: white;
     border: 1px solid rgb(151, 151, 151);
 }
