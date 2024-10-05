@@ -175,7 +175,6 @@ const Jobs = () => {
     useEffect(() => {
         const fetchData = async () => {
             try {
-
                 const waitingJobsData = await fetchWaitingJobsData();
                 const readyJobsData = await fetchReadyJobsData();
                 const runningJobsData = await fetchRunningJobsData();

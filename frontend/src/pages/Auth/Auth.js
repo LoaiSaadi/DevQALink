@@ -6,6 +6,7 @@ const Auth = () => {
     const [email, setEmail] = useState('');
     const [username, setUsername] = useState('');
     const [password, setPassword] = useState('');
+    const [showPassword, setShowPassword] = useState(false); // New state to toggle password visibility
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -63,11 +64,21 @@ const Auth = () => {
                     <div className="input-group">
                         <label>Password</label>
                         <input
-                            type="password"
+                            type={showPassword ? 'text' : 'password'} // Conditionally set the input type
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
                             required
                         />
+                    </div>
+                    <div className="checkbox-group">
+                        <label>
+                            <input
+                                type="checkbox"
+                                checked={showPassword}
+                                onChange={(e) => setShowPassword(e.target.checked)}
+                            />
+                            Show Password
+                        </label>
                     </div>
                     <div className="button-container">
                         <button type="submit" className="auth-button login">Login</button>

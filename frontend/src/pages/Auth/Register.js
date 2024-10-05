@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import './Register.css'; // Use the same CSS as Auth
 
 const Register = () => {
+    
     const navigate = useNavigate();
     const [formData, setFormData] = useState({
         username: '',
@@ -79,6 +80,7 @@ const Register = () => {
                             required
                         />
                     </div>
+                    
                     <div className="button-container">
                         <button type="submit" className="auth-button login">
                             Register

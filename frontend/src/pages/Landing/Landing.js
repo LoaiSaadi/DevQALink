@@ -18,7 +18,7 @@ const Landing = () => {
         <div className="landing-container">
             <div className="overlay">
                 <h1>Welcome to DevQALink</h1>
-                <p>Your seamless link between QA and development</p>
+                <p>Automated QA and Dev Build Scheduling Framework</p>
                 <div className="button-container">
                     <button onClick={handleLoginClick} className="landing-button login">Login</button>
                     <button onClick={handleRegisterClick} className="landing-button register">Register</button>
